@@ -3,13 +3,12 @@ package com.validators;
 import com.annotation.Validate;
 import com.sun.xml.bind.v2.ClassFactory;
 
-import javax.validation.UnexpectedTypeException;
 import java.lang.reflect.Method;
-import java.rmi.UnexpectedException;
 import java.util.Arrays;
 import java.util.InvalidPropertiesFormatException;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class Validator<Target> extends AbstractValidator <Target, Boolean> {
     private Exception exception;
@@ -25,8 +24,25 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean> {
         }
     }
 
+    @FunctionalInterface
+    private interface ThrowingFunction<Target, Source, E extends Exception> {
+        Target accept(Source t) throws E;
+    }
+
+    private static <Source,Target>Function<? super Source, ? extends Target> throwingFunctionWrapper(
+            ThrowingFunction<Target, Source, Exception> throwingConsumer) {
+
+        return i -> {
+            try {
+                return throwingConsumer.accept(i);
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        };
+    }
+
     @Override
-    public Boolean validate() throws Exception {
+    public Boolean validate() throws IllegalArgumentException, InstantiationError {
         try {
             if (!Arrays.stream(this.t.getClass().getDeclaredMethods())
                     .filter(m -> Optional.ofNullable(m.getAnnotation(Validate.class)).map(Validate::mandatory).orElse(false))
@@ -37,9 +53,7 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean> {
             return true;
         } catch (InstantiationException ie) {
             throw new IllegalArgumentException("primitive annotation types cannot be used, implements a valid annotation");
-        } catch (UnexpectedException npe) {
-            throw new RuntimeException("couldn't validate data: " + npe.getMessage());
-        } catch (NullPointerException npe) {
+        } catch (Exception npe) {
             throw new RuntimeException("couldn't validate data: " + npe.getMessage());
         }
     }
