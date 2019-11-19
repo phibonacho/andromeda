@@ -30,7 +30,7 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean> {
         try {
             if (!Arrays.stream(this.t.getClass().getDeclaredMethods())
                     .filter(m -> Optional.ofNullable(m.getAnnotation(Validate.class)).map(Validate::mandatory).orElse(false))
-                    .filter(m -> m.getParameterCount() == 0 && invokeWrapper(m) != null)
+                    .filter(m -> m.getParameterCount() == 0)
                     .map(m -> invokeValidate(m.getAnnotation(Validate.class), m))
                     .filter(bool -> !bool).findFirst().orElse(true))
                 throw exception;
@@ -53,7 +53,6 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean> {
             exception = new IllegalArgumentException("[" + paramGetter.getReturnType().getName() + "] " + paramGetter.getName() + " cannot be validated by annotation [" + ClassFactory.create(v.value()).getClass() + "]");
         } catch (NullPointerException npe) {
             exception = new InvalidPropertiesFormatException(paramGetter.getName() + ", annotated with " + ClassFactory.create(v.value()).getClass() + " cannot return null");
-            System.out.println(paramGetter.getName() + ", annotated with " + ClassFactory.create(v.value()).getClass() + " cannot return null");
         }
         return false;
     }
