@@ -44,6 +44,7 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean> {
         }
     }
 
+    @SuppressWarnings("unchecked") // giusto perché mi fa schifo vederlo tutto giallo...
     private Boolean invokeValidate(Validate v, Method paramGetter) {
         try {
             return ClassFactory.create(v.value()).validate(invokeWrapper(paramGetter));
