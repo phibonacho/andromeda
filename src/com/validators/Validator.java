@@ -1,14 +1,12 @@
 package com.validators;
 
 import com.annotation.Validate;
-import com.sun.xml.bind.v2.ClassFactory;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.InvalidPropertiesFormatException;
 import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 public class Validator<Target> extends AbstractValidator <Target, Boolean> {
     private Exception exception;
@@ -24,22 +22,29 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean> {
         }
     }
 
-    @FunctionalInterface
+/*    @FunctionalInterface
     private interface ThrowingFunction<Target, Source, E extends Exception> {
-        Target accept(Source t) throws E;
+        Target accept(Source t, Object ...params) throws E;
     }
 
-    private static <Source,Target>Function<? super Source, ? extends Target> throwingFunctionWrapper(
-            ThrowingFunction<Target, Source, Exception> throwingConsumer) {
+    private class invokeMethod<ReturnType> implements ThrowingFunction<ReturnType, Method, Exception> {
+        @Override
+        public ReturnType accept(Method method, Object ...params) throws Exception {
+            return invokeWrapper(method, params);
+        }
+    }
 
+
+    private static <Source,Target>Function<? super Source, ? extends Target> invoke(
+            ThrowingFunction<Target, Source, Exception> throwingFunction) {
         return i -> {
             try {
-                return throwingConsumer.accept(i);
+                return throwingFunction.accept(i);
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
         };
-    }
+    }*/
 
     @Override
     public Boolean validate() throws IllegalArgumentException, InstantiationError {
@@ -61,13 +66,15 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean> {
     @SuppressWarnings("unchecked") // giusto perché mi fa schifo vederlo tutto giallo...
     private Boolean invokeValidate(Validate v, Method paramGetter) {
         try {
-            return ClassFactory.create(v.value()).validate(invokeWrapper(paramGetter));
+            return (v.value().getDeclaredConstructor().newInstance()).validate(invokeWrapper(paramGetter));
         } catch (InvalidPropertiesFormatException e) {
             exception = e;
         } catch (IllegalArgumentException iae) {
-            exception = new IllegalArgumentException("[" + paramGetter.getReturnType().getName() + "] " + paramGetter.getName() + " cannot be validated by annotation [" + ClassFactory.create(v.value()).getClass() + "]");
+            exception = new IllegalArgumentException("[" + paramGetter.getReturnType().getName() + "] " + paramGetter.getName() + " cannot be validated by annotation [" + v.value().getName() + "]");
         } catch (NullPointerException npe) {
-            exception = new InvalidPropertiesFormatException(paramGetter.getName() + ", annotated with " + ClassFactory.create(v.value()).getClass() + " cannot return null");
+            exception = new InvalidPropertiesFormatException(paramGetter.getName() + ", annotated with " + v.value().getName() + " cannot return null");
+        } catch (InstantiationException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
+            e.printStackTrace();
         }
         return false;
     }
