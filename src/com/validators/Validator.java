@@ -1,12 +1,16 @@
 package com.validators;
 
 import com.annotation.Validate;
+import com.sun.source.doctree.StartElementTree;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.InvalidPropertiesFormatException;
+import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class Validator<Target> extends AbstractValidator <Target, Boolean> {
     private Exception exception;
@@ -14,29 +18,44 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean> {
         super(t);
     }
 
-    private Object invokeWrapper(Method m, Object ...params) {
-        try {
-            return m.invoke(this.t, params);
-        } catch (Exception e) {
+    @Override
+    public Boolean validate() {
+            return Arrays.stream(this.t.getClass().getDeclaredMethods())
+                    .filter(m -> Optional.ofNullable(m.getAnnotation(Validate.class))
+                                    .map(Validate::mandatory)
+                                 .orElse(false))
+                    .filter(m -> m.getParameterCount() == 0)
+                    .map(m -> invokeValidate(m.getAnnotation(Validate.class), m))
+                    .filter(bool -> !bool).findFirst().orElse(true);
+    }
+
+    @SuppressWarnings("unchecked") // giusto perché mi fa schifo vederlo tutto giallo...
+    // questa funzione dovrebbe essere implementata come nella parte commentata, in modo da poter lanciare direttamente l'eccezione
+    private Boolean invokeValidate(Validate v, Method paramGetter) {
+        List<Method> orElse = Arrays.stream(v.orAtLeast()).map(mName -> {
+            try {
+                return this.t.getClass().getDeclaredMethod(mName);
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            }
             return null;
-        }
+        }).collect(Collectors.toList());
+        orElse.add(paramGetter);
+        return orElse.stream()
+                .map(invokeAndValidate(method -> v.value().getDeclaredConstructor().newInstance()
+                        .validate(method.invoke(this.t))))
+                .filter(valid -> !valid)
+                .findFirst()
+                .orElse(true);
     }
 
-/*    @FunctionalInterface
-    private interface ThrowingFunction<Target, Source, E extends Exception> {
-        Target accept(Source t, Object ...params) throws E;
+    @FunctionalInterface
+    private interface ThrowingFunction<R, I, E extends Exception> {
+        R accept(I s) throws E;
     }
 
-    private class invokeMethod<ReturnType> implements ThrowingFunction<ReturnType, Method, Exception> {
-        @Override
-        public ReturnType accept(Method method, Object ...params) throws Exception {
-            return invokeWrapper(method, params);
-        }
-    }
-
-
-    private static <Source,Target>Function<? super Source, ? extends Target> invoke(
-            ThrowingFunction<Target, Source, Exception> throwingFunction) {
+    // troppo specifico...
+    private static <T>Function<? super Method, T>  invokeAndValidate(ThrowingFunction<T, Method, Exception> throwingFunction) throws RuntimeException {
         return i -> {
             try {
                 return throwingFunction.accept(i);
@@ -44,38 +63,6 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean> {
                 throw new RuntimeException(ex);
             }
         };
-    }*/
-
-    @Override
-    public Boolean validate() throws IllegalArgumentException, InstantiationError {
-        try {
-            if (!Arrays.stream(this.t.getClass().getDeclaredMethods())
-                    .filter(m -> Optional.ofNullable(m.getAnnotation(Validate.class)).map(Validate::mandatory).orElse(false))
-                    .filter(m -> m.getParameterCount() == 0)
-                    .map(m -> invokeValidate(m.getAnnotation(Validate.class), m))
-                    .filter(bool -> !bool).findFirst().orElse(true))
-                throw exception;
-            return true;
-        } catch (InstantiationException ie) {
-            throw new IllegalArgumentException("primitive annotation types cannot be used, implements a valid annotation");
-        } catch (Exception npe) {
-            throw new RuntimeException("couldn't validate data: " + npe.getMessage());
-        }
     }
 
-    @SuppressWarnings("unchecked") // giusto perché mi fa schifo vederlo tutto giallo...
-    private Boolean invokeValidate(Validate v, Method paramGetter) {
-        try {
-            return (v.value().getDeclaredConstructor().newInstance()).validate(invokeWrapper(paramGetter));
-        } catch (InvalidPropertiesFormatException e) {
-            exception = e;
-        } catch (IllegalArgumentException iae) {
-            exception = new IllegalArgumentException("[" + paramGetter.getReturnType().getName() + "] " + paramGetter.getName() + " cannot be validated by annotation [" + v.value().getName() + "]");
-        } catch (NullPointerException npe) {
-            exception = new InvalidPropertiesFormatException(paramGetter.getName() + ", annotated with " + v.value().getName() + " cannot return null");
-        } catch (InstantiationException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
 }
