@@ -1,18 +1,29 @@
 package com.annotation;
 
 import com.annotation.types.AbstractValidateType;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.lang.reflect.Method;
-import java.util.Collections;
-import java.util.List;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface Validate {
-    public Class<? extends AbstractValidateType> value();
-    public boolean mandatory() default false;
-    public String[] orAtLeast() default {};
+
+    /**
+     * @return a validator object
+     */
+    Class<? extends AbstractValidateType> value();
+
+
+    /**
+     * @return true if validate field is mandatory
+     */
+    boolean mandatory() default false;
+
+    /**
+     * @return a set of viable alternatives to current method
+     */
+    String[] alternatives() default {};
 }

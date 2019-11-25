@@ -1,6 +1,7 @@
 package com.validators;
 
 import com.annotation.Validate;
+import com.annotation.exception.InvalidFieldException;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -38,15 +39,12 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean> {
     }
 
     // troppo specifico...
-    private Function<? super Method, Boolean> invokeAndThrow(ThrowingFunction<Method, Boolean, Exception> throwingFunction) throws RuntimeException {
+    private Function<? super Method, Boolean> invokeAndThrow(ThrowingFunction<Method, Boolean, Exception> throwingFunction, Method father) throws RuntimeException {
         return i -> {
             try {
                 return throwingFunction.accept(i);
             } catch (NullPointerException npe) {
-                Validate ann = i.getAnnotation(Validate.class);
-                if(ann.mandatory()) // controlla alternative
-                    throw new RuntimeException(i.getName().replaceAll("^(get|is|has)", "").toLowerCase() + " cannot be null" + (ann.orAtLeast().length > 0 ? ", viable alternatives are: "+ Arrays.stream(ann.orAtLeast()).map(name -> name.replaceAll("^(get|is|has)", "")).reduce((s1, s2) ->s1 +", "+s2).orElse("") : ""));
-                return true; // se è null è valido
+                throw new InvalidFieldException(father, List.of(father.getAnnotation(Validate.class).alternatives()));
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -54,22 +52,20 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean> {
     }
 
     @SuppressWarnings("unchecked")
-    private Function<? super Method, Boolean> invokeAndCatch(ThrowingFunction<Method, Boolean, Exception> throwingFunction) throws Exception {
+    private Function<? super Method, Boolean> invokeAndCatch(ThrowingFunction<Method, Boolean, Exception> throwingFunction) throws InvalidFieldException {
         return i -> {
             try {
                 return throwingFunction.accept(i);
             } catch (NullPointerException npe) {
                 Validate ann = i.getAnnotation(Validate.class);
-                System.out.println(i.getName() + " is " + (ann.mandatory() ? " " : "not ") + "mandatory");
-                System.out.println(i.getName() + " has " + ann.orAtLeast().length + " alternatives");
-                if(ann.mandatory() && ann.orAtLeast().length == 0) // controlla alternative
-                    throw new RuntimeException(i.getName().replaceAll("^(get|is|has)", "").toLowerCase() + " cannot be null and has no viable alternatives" );
-                List<Method> orElse = Arrays.stream(ann.orAtLeast()).map(checkMethod(mName ->  this.t.getClass().getDeclaredMethod(mName))).collect(Collectors.toList());
+                if(ann.mandatory() && ann.alternatives().length == 0) // controlla alternative
+                    throw new InvalidFieldException(i);
+                List<Method> orElse = Arrays.stream(ann.alternatives()).map(checkMethod(mName ->  this.t.getClass().getDeclaredMethod(mName))).collect(Collectors.toList());
                 return orElse.stream()
                         .map(invokeAndThrow(method -> ann.value().getDeclaredConstructor().newInstance()
-                                .validate(method.invoke(this.t))))
+                                .validate(method.invoke(this.t)), i))
                         .filter(valid -> valid)
-                        .findFirst().orElseThrow(()->new RuntimeException(i.getName().replaceAll("^(get|is|has)", "").toLowerCase() + " cannot be null" + (ann.orAtLeast().length > 0 ? ", viable alternatives are: "+ Arrays.stream(ann.orAtLeast()).map(name -> name.replaceAll("^(get|is|has)", "")).reduce((s1, s2) ->s1 +", "+s2).orElse("") : "")));// valido le alternative
+                        .findFirst().orElseThrow(()->new InvalidFieldException(i, orElse.stream().map(Method::getName).collect(Collectors.toList())));// valido le alternative
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
