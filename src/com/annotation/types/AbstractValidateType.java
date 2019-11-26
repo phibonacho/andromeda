@@ -6,7 +6,7 @@ public abstract class AbstractValidateType<GuardType> implements ValidateTypeInt
 
     protected AbstractValidateType() {}
 
-    public Boolean validate(GuardType guard) throws InvalidPropertiesFormatException, IllegalArgumentException {
+    public Boolean validate(GuardType guard) throws IllegalArgumentException, InvalidPropertiesFormatException {
         return isInstance(guard) && check(guard);
     }
 

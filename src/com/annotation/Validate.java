@@ -14,7 +14,7 @@ public @interface Validate {
     /**
      * @return a validator object
      */
-    Class<? extends AbstractValidateType> value();
+    Class<? extends AbstractValidateType> with();
 
 
     /**
@@ -26,4 +26,6 @@ public @interface Validate {
      * @return a set of viable alternatives to current method
      */
     String[] alternatives() default {};
+
+    String[] conflicts() default {};
 }
