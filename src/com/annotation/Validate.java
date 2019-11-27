@@ -28,4 +28,6 @@ public @interface Validate {
     String[] alternatives() default {};
 
     String[] conflicts() default {};
+
+    String[] require() default {};
 }
