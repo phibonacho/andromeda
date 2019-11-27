@@ -9,7 +9,6 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.InvalidPropertiesFormatException;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -59,7 +58,6 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean> {
         R accept(I s) throws E;
     }
 
-    @SuppressWarnings("unchecked")
     // invoke method and return or fallback if method invocation return null
     private <I,R> Function<I, R> invokeAndHandle(ThrowingFunction<I, R, Exception> throwingFunction, Function<I, R> fallback) throws InvalidFieldException {
         return i -> {
@@ -92,7 +90,7 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean> {
     }
 
     // return method invocation if method present
-    private Function<? super String, Method> checkMethod(ThrowingFunction<String, Method, NoSuchMethodException> throwingFunction) {
+    private Function<? super String, Method> checkMethod(ThrowingFunction<String, Method, NoSuchMethodException> throwingFunction) throws RuntimeException{
 
         return i -> {
             try {
@@ -106,7 +104,7 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean> {
     }
 
     // return true if no conflicts detected ()
-    private Boolean checkConflicts(Method m) throws Exception{
+    private Boolean checkConflicts(Method m) throws ConflictFieldException {
         // verifica che ogni metodo che va in conflitto sia null, altrimenti lancia eccezione.
         Validate ann = m.getAnnotation(Validate.class);
         if(List.of(ann.conflicts())
