@@ -1,6 +1,7 @@
 package com.validators;
 
 import com.annotation.Validate;
+import com.annotation.exception.AnnotationException;
 import com.annotation.exception.ConflictFieldException;
 import com.annotation.exception.InvalidFieldException;
 import com.annotation.exception.RequirementsException;
@@ -27,7 +28,7 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean> {
                 .filter(m -> m.getParameterCount() == 0)
                 // invoke validate and obtain result
                 .map(invokeAndHandle(
-                        m -> !validateMethod(m) || checkRequirements(m) && checkConflicts(m)
+                        m -> !checkRequirements(m) || (validateMethod(m)  && checkConflicts(m))
                         , m -> !m.getAnnotation(Validate.class).mandatory() || validateAlternatives(m))) // check for viable alternatives
                 // lazy find first false validation
                 .filter(bool -> !bool).findFirst().orElse(true);
@@ -46,7 +47,7 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean> {
         return Arrays.stream(ann.alternatives())
                 .map(fetchMethod(mName ->  this.t.getClass().getDeclaredMethod(mName)))
                 .map(invokeAndHandle(
-                        m -> !validateChildMethod(ann, m) || checkChildRequirements(m) && checkChildConflicts(m),
+                        m -> !checkChildRequirements(m) || (validateChildMethod(ann, m) && checkChildConflicts(m)),
                         () -> false))
                 // lazy find first valid
                 .filter(valid -> valid)
@@ -167,8 +168,10 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean> {
                 throw new InvalidFieldException(e.getMessage());
             } catch (RequirementsException e) {
                 throw new RequirementsException(e.getMessage());
+            } catch (IllegalArgumentException e) {
+                throw new AnnotationException(e.getMessage() + ". Have you annotated your field correctly?");
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException(e.getMessage());
             }
         };
     }
