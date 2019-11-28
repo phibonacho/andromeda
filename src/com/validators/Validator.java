@@ -20,8 +20,15 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean> {
         super(t);
     }
 
+    /**
+     * @return true if all fields in object are valid
+     * @throws RequirementsException if a field requires the validation of another field
+     * @throws InvalidFieldException if a field do not match a specific format
+     * @throws ConflictFieldException if a field conflicts with at least another one
+     * @throws AnnotationException if a field inherit or use a non-coherent annotation
+     */
     @Override
-    public Boolean validate() throws ConflictFieldException, InvalidFieldException{
+    public Boolean validate() throws RequirementsException, InvalidFieldException, ConflictFieldException, AnnotationException {
         return Arrays.stream(this.t.getClass().getDeclaredMethods())
                 .filter(m -> m.getAnnotation(Validate.class)!=null)
                 // getters has no param
