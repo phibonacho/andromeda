@@ -46,15 +46,15 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean> {
         return Arrays.stream(ann.alternatives())
                 .map(fetchMethod(mName ->  this.t.getClass().getDeclaredMethod(mName)))
                 .map(invokeAndHandle(
-                        m -> !validateChildMethod(ann, m) || checkRequirements(m) && checkConflicts(m),
+                        m -> !validateChildMethod(ann, m) || checkChildRequirements(m) && checkChildConflicts(m),
                         () -> false))
-                // lazy find first not valid
+                // lazy find first valid
                 .filter(valid -> valid)
                 .findFirst().orElseThrow(() -> new InvalidFieldException(method, List.of(ann.alternatives())));
     }
 
     /**
-     * retrieve conflictual methods with one passed as argument and insure
+     * retrieve conflictual methods with one passed as argument
      * @param m method with possible conflicts
      * @return true if no conflicts found
      * @throws ConflictFieldException if conflicts are found
@@ -65,11 +65,19 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean> {
         if(List.of(ann.conflicts())
                 .stream()
                 .map(fetchMethod(mName -> this.t.getClass().getDeclaredMethod(mName)))
-                .map(invokeAndHandle(method -> validateChildMethod(ann, method), (method) -> false))
+                .map(invokeAndHandle(method -> validateChildMethod(ann, method), () -> false))
                 // cerca il primo metodo con buona validazione ed esce per lanciare eccezione
                 .filter(valid -> valid)
                 .findFirst().orElse(false)) throw new ConflictFieldException(m, List.of(ann.conflicts()));
         return true;
+    }
+
+    /**
+     * Shorthand for {@link #checkConflicts(Method)}, in most case, required or conflictual object are not annotated
+     * this means that they have no specific conflicts or have same as parent
+     */
+    private Boolean checkChildConflicts(Method method) throws RequirementsException {
+        return method.getAnnotation(Validate.class)==null || checkRequirements(method);
     }
 
     /**
@@ -79,16 +87,24 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean> {
      * @throws RequirementsException if some requirements are not met
      */
     private Boolean checkRequirements(Method m) throws RequirementsException {
-        Validate ann = m.getAnnotation(Validate.class); // parent annotation
-        if(ann.require().length == 0 || List.of(ann.require())
+        Validate validate = m.getAnnotation(Validate.class);
+        if(validate.require().length == 0 || List.of(validate.require())
                 .stream()
                 // create a stream of require methods (not null)
                 .map(fetchMethod(mName -> this.t.getClass().getDeclaredMethod(mName)))
                 // try to validate methods with their own annotation
-                .map(invokeAndHandle(method -> !validateChildMethod(ann, method) || checkRequirements(method) && checkConflicts(method), () -> false ))
+                .map(invokeAndHandle(method -> !validateChildMethod(validate, method) || checkChildRequirements(method) && checkChildConflicts(method), () -> false ))
                 .filter(valid -> !valid)
                 .findFirst().orElse(true)) return true;
-        throw new RequirementsException(m, List.of(ann.require()));
+        throw new RequirementsException(m, List.of(validate.require()));
+    }
+
+    /**
+     * Shorthand for {@link #checkRequirements(Method)}, in most case, required or conflictual object are not annotated
+     * this means that they have no specific requirements or have same as parent
+     */
+    private Boolean checkChildRequirements(Method method) throws RequirementsException {
+        return method.getAnnotation(Validate.class)==null || checkRequirements(method);
     }
 
     /**
