@@ -11,11 +11,12 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface Validate {
 
+    enum Ignore {REQUIREMENTS, MANDATORY, ALTERNATIVES, CONFLICTS}
+
     /**
      * @return a validator object
      */
     Class<? extends AbstractValidateType> with();
-
 
     /**
      * @return true if validate field is mandatory
@@ -30,4 +31,5 @@ public @interface Validate {
     String[] conflicts() default {};
 
     String[] require() default {};
+
 }

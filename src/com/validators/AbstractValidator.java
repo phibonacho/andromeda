@@ -1,10 +1,8 @@
 package com.validators;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.InvalidPropertiesFormatException;
-
-public abstract class AbstractValidator <Target, Control> {
+public abstract class AbstractValidator <Target, Control, Annotation> {
     protected Target t;
+    protected Class<Annotation> annotationClass;
 
     public AbstractValidator(Target t){
         this.t = t;

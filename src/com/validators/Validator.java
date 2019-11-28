@@ -1,23 +1,30 @@
 package com.validators;
 
 import com.annotation.Validate;
-import com.annotation.exception.AnnotationException;
-import com.annotation.exception.ConflictFieldException;
-import com.annotation.exception.InvalidFieldException;
-import com.annotation.exception.RequirementsException;
+import com.annotation.exception.*;
 import com.annotation.types.ValidateTypeInterface;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.InvalidPropertiesFormatException;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class Validator<Target> extends AbstractValidator <Target, Boolean> {
+public class Validator<Target> extends AbstractValidator <Target, Boolean, Validate> {
+    private Set<Validate.Ignore> ignoreList;
+
     public Validator(Target t) {
         super(t);
+        this.annotationClass = Validate.class;
+        ignoreList = new HashSet<>();
+    }
+
+    public Validator ignoring(Validate.Ignore ...ignorable){
+        this.ignoreList = Set.of(ignorable);
+        return this;
+    }
+
+    private boolean isIgnorable(Validate.Ignore ignorable){
+        return ignoreList.contains(ignorable);
     }
 
     /**
@@ -30,26 +37,31 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean> {
     @Override
     public Boolean validate() throws RequirementsException, InvalidFieldException, ConflictFieldException, AnnotationException {
         return Arrays.stream(this.t.getClass().getDeclaredMethods())
-                .filter(m -> m.getAnnotation(Validate.class)!=null)
+                .filter(m -> m.getAnnotation(annotationClass)!=null)
                 // getters has no param
                 .filter(m -> m.getParameterCount() == 0)
+                .sorted(Comparator.comparing(m -> m.getAnnotation(annotationClass).mandatory())) // mandatory fields as first
                 // invoke validate and obtain result
                 .map(invokeAndHandle(
-                        m -> !checkRequirements(m) || (validateMethod(m)  && checkConflicts(m))
-                        , m -> !m.getAnnotation(Validate.class).mandatory() || validateAlternatives(m))) // check for viable alternatives
+                        m -> !validateMethod(m) || (checkRequirements(m)  && checkConflicts(m))
+                        , this::validateAlternatives)) // check for viable alternatives
                 // lazy find first false validation
                 .filter(bool -> !bool).findFirst().orElse(true);
     }
 
     /**
      * @param method a mandatory method which returned a null value
-     * @return true if at least one of the alternatives is valid
-     * @throws InvalidFieldException if no non-null alternatives are found
+     * @return true if at least one of the alternatives is valid or mandatory is ignorable
+     * @throws InvalidFieldException if no non-null alternatives are found or alternatives are ignored
      */
     private boolean validateAlternatives(Method method) throws InvalidFieldException{
-        Validate ann = method.getAnnotation(Validate.class);
-        if(ann.mandatory() && ann.alternatives().length == 0)
-            throw new InvalidFieldException(method);
+        Validate ann = method.getAnnotation(annotationClass);
+
+        if(isIgnorable(Validate.Ignore.ALTERNATIVES))
+            throw new InvalidFieldException(method, List.of(ann.alternatives()));
+
+        if(isIgnorable(Validate.Ignore.MANDATORY) || !ann.mandatory())
+            return true;
 
         return Arrays.stream(ann.alternatives())
                 .map(fetchMethod(mName ->  this.t.getClass().getDeclaredMethod(mName)))
@@ -68,9 +80,9 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean> {
      * @throws ConflictFieldException if conflicts are found
      */
     private Boolean checkConflicts(Method m) throws ConflictFieldException {
-        // verifica che ogni metodo che va in conflitto sia null, altrimenti lancia eccezione.
-        Validate ann = m.getAnnotation(Validate.class);
-        if(List.of(ann.conflicts())
+        Validate ann = m.getAnnotation(annotationClass);
+        if(!isIgnorable(Validate.Ignore.CONFLICTS)
+                && List.of(ann.conflicts())
                 .stream()
                 .map(fetchMethod(mName -> this.t.getClass().getDeclaredMethod(mName)))
                 .map(invokeAndHandle(method -> validateChildMethod(ann, method), () -> false))
@@ -85,7 +97,7 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean> {
      * this means that they have no specific conflicts or have same as parent
      */
     private Boolean checkChildConflicts(Method method) throws RequirementsException {
-        return method.getAnnotation(Validate.class)==null || checkRequirements(method);
+        return method.getAnnotation(annotationClass)==null || checkConflicts(method);
     }
 
     /**
@@ -95,8 +107,9 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean> {
      * @throws RequirementsException if some requirements are not met
      */
     private Boolean checkRequirements(Method m) throws RequirementsException {
-        Validate validate = m.getAnnotation(Validate.class);
-        if(validate.require().length == 0 || List.of(validate.require())
+        Validate validate = m.getAnnotation(annotationClass);
+        if(isIgnorable(Validate.Ignore.REQUIREMENTS)
+                ||validate.require().length == 0 || List.of(validate.require())
                 .stream()
                 // create a stream of require methods (not null)
                 .map(fetchMethod(mName -> this.t.getClass().getDeclaredMethod(mName)))
@@ -112,7 +125,7 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean> {
      * this means that they have no specific requirements or have same as parent
      */
     private Boolean checkChildRequirements(Method method) throws RequirementsException {
-        return method.getAnnotation(Validate.class)==null || checkRequirements(method);
+        return method.getAnnotation(annotationClass) == null || checkRequirements(method);
     }
 
     /**
@@ -131,14 +144,14 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean> {
      * Same function as {@link #validateMethod(Validate, Method)} but use method's father annotation if not annotated
      */
     private Boolean validateChildMethod(Validate v, Method method) throws Exception {
-        return validateMethod(Optional.ofNullable(method.getAnnotation(Validate.class)).orElse(v), method);
+        return validateMethod(Optional.ofNullable(method.getAnnotation(annotationClass)).orElse(v), method);
     }
 
     /**
      * Short hand for {@link #validateMethod(Validate, Method)} uses method own validate annotation
      */
     private Boolean validateMethod(Method m) throws Exception {
-        return validateMethod(m.getAnnotation(Validate.class), m);
+        return validateMethod(m.getAnnotation(annotationClass), m);
     }
 
     @FunctionalInterface
