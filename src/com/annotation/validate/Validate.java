@@ -1,6 +1,6 @@
-package com.annotation;
+package com.annotation.validate;
 
-import com.annotation.types.AbstractValidateType;
+import com.annotation.validate.types.AbstractValidateType;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

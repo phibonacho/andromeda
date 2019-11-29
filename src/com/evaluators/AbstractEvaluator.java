@@ -1,9 +1,9 @@
-package com.validators;
+package com.evaluators;
 
-import com.annotation.exception.AnnotationException;
-import com.annotation.exception.ConflictFieldException;
-import com.annotation.exception.InvalidFieldException;
-import com.annotation.exception.RequirementsException;
+import com.annotation.validate.exception.AnnotationException;
+import com.annotation.validate.exception.ConflictFieldException;
+import com.annotation.validate.exception.InvalidFieldException;
+import com.annotation.validate.exception.RequirementsException;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -14,11 +14,11 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public abstract class AbstractValidator <Target, Control, A extends Annotation> {
+public abstract class AbstractEvaluator<Target, Control, A extends Annotation> {
     protected Target t;
     protected Class<A> annotationClass;
 
-    public AbstractValidator(Target t){
+    public AbstractEvaluator(Target t){
         this.t = t;
     }
 

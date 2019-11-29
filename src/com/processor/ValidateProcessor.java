@@ -1,8 +1,8 @@
 package com.processor;
 
 
-import com.annotation.Validate;
-import com.validators.Validator;
+import com.annotation.validate.Validate;
+import com.evaluators.ValidateEvaluator;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
@@ -15,7 +15,7 @@ import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import java.util.Set;
 
-@SupportedAnnotationTypes("com.annotation.Validate")
+@SupportedAnnotationTypes("com.annotation.validate.Validate")
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 public class ValidateProcessor extends AbstractProcessor {
 
@@ -35,7 +35,7 @@ public class ValidateProcessor extends AbstractProcessor {
 
             //Generate a source file with a specified class name.
             try {
-                Validator validator = new Validator<>(e);
+                ValidateEvaluator validator = new ValidateEvaluator<>(e);
                 assert validator.validate();
             } catch (Exception x) {
                 System.out.println("experienced error!");

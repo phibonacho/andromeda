@@ -1,4 +1,6 @@
-package com.annotation.types;
+package com.annotation.validate.types;
+
+import com.annotation.validate.types.ValidateTypeInterface;
 
 import java.util.InvalidPropertiesFormatException;
 

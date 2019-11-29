@@ -1,27 +1,27 @@
-package com.validators;
+package com.evaluators;
 
-import com.annotation.Validate;
-import com.annotation.exception.AnnotationException;
-import com.annotation.exception.ConflictFieldException;
-import com.annotation.exception.InvalidFieldException;
-import com.annotation.exception.RequirementsException;
-import com.annotation.types.ValidateTypeInterface;
+import com.annotation.validate.Validate;
+import com.annotation.validate.exception.AnnotationException;
+import com.annotation.validate.exception.ConflictFieldException;
+import com.annotation.validate.exception.InvalidFieldException;
+import com.annotation.validate.exception.RequirementsException;
+import com.annotation.validate.types.ValidateTypeInterface;
 
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-public class Validator<Target> extends AbstractValidator <Target, Boolean, Validate> {
+public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean, Validate> {
     private Set<Validate.Ignore> ignoreList;
 
-    public Validator(Target t) {
+    public ValidateEvaluator(Target t) {
         super(t);
         this.annotationClass = Validate.class;
         ignoreList = new HashSet<>();
     }
 
-    public Validator ignoring(Validate.Ignore ...ignorable){
+    public ValidateEvaluator ignoring(Validate.Ignore ...ignorable){
         this.ignoreList = Set.of(ignorable);
         return this;
     }

@@ -1,4 +1,4 @@
-package com.annotation.types;
+package com.annotation.validate.types;
 
 public class LongValue extends AbstractNumericType {
     @Override

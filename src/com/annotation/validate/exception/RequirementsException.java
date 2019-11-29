@@ -1,4 +1,4 @@
-package com.annotation.exception;
+package com.annotation.validate.exception;
 
 import java.lang.reflect.Method;
 import java.util.List;

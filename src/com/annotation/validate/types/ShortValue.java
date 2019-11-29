@@ -1,4 +1,4 @@
-package com.annotation.types;
+package com.annotation.validate.types;
 
 public class ShortValue extends AbstractNumericType {
     @Override

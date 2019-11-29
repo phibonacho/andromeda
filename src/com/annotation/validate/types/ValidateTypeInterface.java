@@ -1,4 +1,4 @@
-package com.annotation.types;
+package com.annotation.validate.types;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.InvalidPropertiesFormatException;

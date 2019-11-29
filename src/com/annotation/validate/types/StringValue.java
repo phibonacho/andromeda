@@ -1,4 +1,4 @@
-package com.annotation.types;
+package com.annotation.validate.types;
 
 import org.apache.commons.lang.StringUtils;
 import java.util.InvalidPropertiesFormatException;
