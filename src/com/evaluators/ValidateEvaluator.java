@@ -89,7 +89,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         Validate ann = method.getAnnotation(annotationClass);
 
         if(isIgnorable(Validate.Ignore.ALTERNATIVES))
-            throw new InvalidFieldException(method, List.of(ann.alternatives()));
+            throw new InvalidFieldException(method);
 
         if(isIgnorable(Validate.Ignore.MANDATORY) || !ann.mandatory())
             return true;
