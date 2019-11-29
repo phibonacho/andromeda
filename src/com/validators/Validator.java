@@ -1,13 +1,16 @@
 package com.validators;
 
 import com.annotation.Validate;
-import com.annotation.exception.*;
+import com.annotation.exception.AnnotationException;
+import com.annotation.exception.ConflictFieldException;
+import com.annotation.exception.InvalidFieldException;
+import com.annotation.exception.RequirementsException;
 import com.annotation.types.ValidateTypeInterface;
 
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public class Validator<Target> extends AbstractValidator <Target, Boolean, Validate> {
     private Set<Validate.Ignore> ignoreList;
@@ -23,11 +26,13 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean, Valid
         return this;
     }
 
-    private boolean isIgnorable(Validate.Ignore ignorable){
-        return ignoreList.contains(ignorable);
+    @Override
+    public Boolean validate(){
+        return super.validate();
     }
 
     /**
+     * @param s the stream containing field validate evaluation
      * @return true if all fields in object are valid
      * @throws RequirementsException if a field requires the validation of another field
      * @throws InvalidFieldException if a field do not match a specific format
@@ -35,18 +40,40 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean, Valid
      * @throws AnnotationException if a field inherit or use a non-coherent annotation
      */
     @Override
-    public Boolean validate() throws RequirementsException, InvalidFieldException, ConflictFieldException, AnnotationException {
-        return Arrays.stream(this.t.getClass().getDeclaredMethods())
-                .filter(m -> m.getAnnotation(annotationClass)!=null)
-                // getters has no param
-                .filter(m -> m.getParameterCount() == 0)
-                .sorted(Comparator.comparing(m -> m.getAnnotation(annotationClass).mandatory())) // mandatory fields as first
-                // invoke validate and obtain result
-                .map(invokeAndHandle(
-                        m -> !validateMethod(m) || (checkRequirements(m)  && checkConflicts(m))
-                        , this::validateAlternatives)) // check for viable alternatives
-                // lazy find first false validation
-                .filter(bool -> !bool).findFirst().orElse(true);
+    public Boolean evaluate(Stream<Boolean> s) throws RequirementsException, InvalidFieldException, ConflictFieldException, AnnotationException {
+        return s.filter(bool -> !bool).findFirst().orElse(true); // lazy find first false validation
+    }
+
+    @Override
+    protected Function<Method, Boolean> validateAlgorithm() {
+        return invokeAndHandle(m -> !validateMethod(m) || (checkRequirements(m)  && checkConflicts(m)), this::validateAlternatives);
+    }
+
+    @Override
+    protected Function<Method, Boolean> sortPredicate() {
+        return m -> m.getAnnotation(annotationClass).mandatory();
+    }
+
+
+    /* ----------------- PRIVATE METHODS ----------------- */
+
+    /**
+     * Validate method with a generic validate interface
+     * @param v a Validate annotation use for validate paramGetter result
+     * @param paramGetter a method to validate
+     * @return true if paramGetter return a valid value
+     * @throws Exception if not valid
+     */
+    @SuppressWarnings("unchecked") // giusto perché mi fa schifo vederlo tutto giallo...
+    private Boolean validateMethod(Validate v, Method paramGetter) throws Exception {
+        return ValidateTypeInterface.create(v.with()).validate(paramGetter.invoke(this.t));
+    }
+
+    /**
+     * Short hand for {@link #validateMethod(Validate, Method)} uses method own validate annotation
+     */
+    private Boolean validateMethod(Method m) throws Exception {
+        return validateMethod(m.getAnnotation(annotationClass), m);
     }
 
     /**
@@ -93,14 +120,6 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean, Valid
     }
 
     /**
-     * Shorthand for {@link #checkConflicts(Method)}, in most case, required or conflictual object are not annotated
-     * this means that they have no specific conflicts or have same as parent
-     */
-    private Boolean checkChildConflicts(Method method) throws RequirementsException {
-        return method.getAnnotation(annotationClass)==null || checkConflicts(method);
-    }
-
-    /**
      * Requirements must be met by parent mandatory annotations and child annotation of a mandatory parent
      * @param m Method with requirements to satisfy
      * @return true if all requirements are met
@@ -109,7 +128,7 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean, Valid
     private Boolean checkRequirements(Method m) throws RequirementsException {
         Validate validate = m.getAnnotation(annotationClass);
         if(isIgnorable(Validate.Ignore.REQUIREMENTS)
-                ||validate.require().length == 0 || List.of(validate.require())
+                || List.of(validate.require())
                 .stream()
                 // create a stream of require methods (not null)
                 .map(fetchMethod(mName -> this.t.getClass().getDeclaredMethod(mName)))
@@ -121,26 +140,6 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean, Valid
     }
 
     /**
-     * Shorthand for {@link #checkRequirements(Method)}, in most case, required or conflictual object are not annotated
-     * this means that they have no specific requirements or have same as parent
-     */
-    private Boolean checkChildRequirements(Method method) throws RequirementsException {
-        return method.getAnnotation(annotationClass) == null || checkRequirements(method);
-    }
-
-    /**
-     * Validate method with a generic validate interface
-     * @param v a Validate annotation use for validate paramGetter result
-     * @param paramGetter a method to validate
-     * @return true if paramGetter return a valid value
-     * @throws Exception if not valid
-     */
-    @SuppressWarnings("unchecked") // giusto perché mi fa schifo vederlo tutto giallo...
-    private Boolean validateMethod(Validate v, Method paramGetter) throws Exception {
-        return ValidateTypeInterface.create(v.with()).validate(paramGetter.invoke(this.t));
-    }
-
-    /**
      * Same function as {@link #validateMethod(Validate, Method)} but use method's father annotation if not annotated
      */
     private Boolean validateChildMethod(Validate v, Method method) throws Exception {
@@ -148,69 +147,22 @@ public class Validator<Target> extends AbstractValidator <Target, Boolean, Valid
     }
 
     /**
-     * Short hand for {@link #validateMethod(Validate, Method)} uses method own validate annotation
+     * Shorthand for {@link #checkConflicts(Method)}, in most case, required or conflictual object are not annotated
+     * this means that they have no specific conflicts or have same as parent
      */
-    private Boolean validateMethod(Method m) throws Exception {
-        return validateMethod(m.getAnnotation(annotationClass), m);
+    private Boolean checkChildConflicts(Method method) throws RequirementsException {
+        return method.getAnnotation(annotationClass)==null || checkConflicts(method);
     }
-
-    @FunctionalInterface
-    private interface ThrowingFunction<I, R, E extends Exception> {
-        R accept(I s) throws E;
-    }
-
-    // invoke method and return or fallback if method invocation return null
-    private <I,R> Function<I, R> invokeAndHandle(ThrowingFunction<I, R, Exception> throwingFunction, Function<I, R> fallback) throws InvalidFieldException {
-        return i -> {
-            try {
-                return throwingFunction.accept(i);
-            } catch (NullPointerException npe) {
-                return fallback.apply(i);
-            } catch (InvalidPropertiesFormatException e) {
-                throw new InvalidFieldException(e.getMessage());
-            } catch (ConflictFieldException e) {
-                throw new ConflictFieldException(e.getMessage());
-            } catch (RequirementsException e) {
-                throw new RequirementsException(e.getMessage());
-            }catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        };
-    }
-
-    private <I,R>Function<I, R> invokeAndHandle(ThrowingFunction<I, R, Exception> throwingFunction, Supplier<R> fallback) throws InvalidFieldException {
-        return i -> {
-            try {
-                return throwingFunction.accept(i);
-            } catch (NullPointerException npe) {
-                return fallback.get();
-            } catch (InvalidPropertiesFormatException e) {
-                throw new InvalidFieldException(e.getMessage());
-            } catch (RequirementsException e) {
-                throw new RequirementsException(e.getMessage());
-            } catch (IllegalArgumentException e) {
-                throw new AnnotationException(e.getMessage() + ". Have you annotated your field correctly?");
-            } catch (Exception e) {
-                throw new RuntimeException(e.getMessage());
-            }
-        };
-    }
-
 
     /**
-     * @param throwingFunction a function which takes a string and return a method
-     * @return the method of the given class
-     * @throws RuntimeException if method is not found or other exceptions are catch
+     * Shorthand for {@link #checkRequirements(Method)}, in most case, required or conflictual object are not annotated
+     * this means that they have no specific requirements or have same as parent
      */
-    private Function<? super String, Method> fetchMethod(ThrowingFunction<String, Method, NoSuchMethodException> throwingFunction) throws RuntimeException{
-        return i -> {
-            try {
-                return throwingFunction.accept(i);
-            } catch (NoSuchMethodException nsme) {
-                throw new RuntimeException("cannot find method: " + nsme.getMessage());
-            } catch (Exception e) {
-                throw new RuntimeException(e.getMessage());
-            }
-        };
+    private Boolean checkChildRequirements(Method method) throws RequirementsException {
+        return method.getAnnotation(annotationClass) == null || checkRequirements(method);
+    }
+
+    private boolean isIgnorable(Validate.Ignore ignorable){
+        return ignoreList.contains(ignorable);
     }
 }
