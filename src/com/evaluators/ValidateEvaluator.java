@@ -93,7 +93,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         return Arrays.stream(ann.alternatives())
                 .map(fetchMethod(mName ->  this.t.getClass().getDeclaredMethod(mName)))
                 .map(invokeAndHandle(
-                        m -> !checkChildRequirements(m) || (validateChildMethod(ann, m) && checkChildConflicts(m)),
+                        m -> !validateChildMethod(ann, m) || (checkChildRequirements(m) && checkChildConflicts(m)),
                         () -> false))
                 // lazy find first valid
                 .filter(valid -> valid)
