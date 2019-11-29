@@ -14,11 +14,13 @@ import java.util.stream.Stream;
 
 public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean, Validate> {
     private Set<Validate.Ignore> ignoreList;
+    private Set<String> av;
 
     public ValidateEvaluator(Target t) {
         super(t);
         this.annotationClass = Validate.class;
         ignoreList = new HashSet<>();
+        av = new HashSet<>();
     }
 
     public ValidateEvaluator ignoring(Validate.Ignore ...ignorable){
@@ -51,7 +53,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
 
     @Override
     protected Function<Method, Boolean> sortPredicate() {
-        return m -> m.getAnnotation(annotationClass).mandatory();
+        return a -> !a.getAnnotation(annotationClass).mandatory();
     }
 
 
@@ -59,21 +61,23 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
 
     /**
      * Validate method with a generic validate interface
-     * @param v a Validate annotation use for validate paramGetter result
-     * @param paramGetter a method to validate
-     * @return true if paramGetter return a valid value
+     * @param v a Validate annotation use for validate method result
+     * @param method a method to validate
+     * @return true if method return a valid value
      * @throws Exception if not valid
      */
     @SuppressWarnings("unchecked") // giusto perché mi fa schifo vederlo tutto giallo...
-    private Boolean validateMethod(Validate v, Method paramGetter) throws Exception {
-        return ValidateTypeInterface.create(v.with()).validate(paramGetter.invoke(this.t));
+    private Boolean validateMethod(Validate v, Method method) throws Exception {
+        if(ValidateTypeInterface.create(v.with()).validate(method.invoke(this.t)))
+            av.add(method.getName());
+        return true;
     }
 
     /**
      * Short hand for {@link #validateMethod(Validate, Method)} uses method own validate annotation
      */
     private Boolean validateMethod(Method m) throws Exception {
-        return validateMethod(m.getAnnotation(annotationClass), m);
+        return av.contains(m.getName()) || validateMethod(m.getAnnotation(annotationClass), m);
     }
 
     /**
@@ -143,7 +147,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
      * Same function as {@link #validateMethod(Validate, Method)} but use method's father annotation if not annotated
      */
     private Boolean validateChildMethod(Validate v, Method method) throws Exception {
-        return validateMethod(Optional.ofNullable(method.getAnnotation(annotationClass)).orElse(v), method);
+        return av.contains(method.getName()) || validateMethod(Optional.ofNullable(method.getAnnotation(annotationClass)).orElse(v), method);
     }
 
     /**

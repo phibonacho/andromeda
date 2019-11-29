@@ -25,11 +25,9 @@ public abstract class AbstractEvaluator<Target, Control, A extends Annotation> {
     private Stream<Control> validateStream() {
         return Arrays.stream(this.t.getClass().getDeclaredMethods())
                 .filter(m -> m.getAnnotation(annotationClass)!=null)
-                // getters has no param
                 .filter(m -> m.getParameterCount() == 0)
                 .sorted(Comparator.comparing(sortPredicate())) // mandatory fields as first
-                // invoke validate and obtain result
-                .map(validateAlgorithm()); // check for viable alternatives
+                .map(validateAlgorithm());
     }
 
     public Control validate(){
