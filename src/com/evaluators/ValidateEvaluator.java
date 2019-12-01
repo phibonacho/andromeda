@@ -144,7 +144,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
     }
 
     /**
-     * Same function as {@link #validateMethod(Validate, Method)} but use method's father annotation if not annotated
+     * {@link #validateMethod(Validate, Method)} wrapper but use a fallback annotation if not annotated
      */
     private Boolean validateChildMethod(Validate v, Method method) throws Exception {
         return av.contains(method.getName()) || validateMethod(Optional.ofNullable(method.getAnnotation(annotationClass)).orElse(v), method);
