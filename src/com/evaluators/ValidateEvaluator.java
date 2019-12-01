@@ -98,7 +98,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
                 .map(fetchMethod(mName ->  this.t.getClass().getDeclaredMethod(mName)))
                 .map(invokeAndHandle(
                         m -> !validateChildMethod(ann, m) || (checkChildRequirements(m) && checkChildConflicts(m)),
-                        () -> false))
+                        m -> false))
                 // lazy find first valid
                 .filter(valid -> valid)
                 .findFirst().orElseThrow(() -> new InvalidFieldException(method, List.of(ann.alternatives())));
@@ -125,22 +125,22 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
 
     /**
      * Requirements must be met by parent mandatory annotations and child annotation of a mandatory parent
-     * @param m Method with requirements to satisfy
+     * @param method with requirements to satisfy
      * @return true if all requirements are met
      * @throws RequirementsException if some requirements are not met
      */
-    private Boolean checkRequirements(Method m) throws RequirementsException {
-        Validate validate = m.getAnnotation(annotationClass);
+    private Boolean checkRequirements(Method method) throws RequirementsException {
+        Validate ann = method.getAnnotation(annotationClass);
         if(isIgnorable(Validate.Ignore.REQUIREMENTS)
-                || List.of(validate.require())
+                || List.of(ann.require())
                 .stream()
                 // create a stream of require methods (not null)
                 .map(fetchMethod(mName -> this.t.getClass().getDeclaredMethod(mName)))
                 // try to validate methods with their own annotation
-                .map(invokeAndHandle(method -> !validateChildMethod(validate, method) || checkChildRequirements(method) && checkChildConflicts(method), () -> false ))
+                .map(invokeAndHandle(m -> !validateChildMethod(ann, m) || checkChildRequirements(m) && checkChildConflicts(m), m -> validateChildAlternatives(m, new RequirementsException(method, List.of(ann.require())))))
                 .filter(valid -> !valid)
                 .findFirst().orElse(true)) return true;
-        throw new RequirementsException(m, List.of(validate.require()));
+        throw new RequirementsException(method, List.of(ann.require()));
     }
 
     /**
@@ -149,6 +149,23 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
     private Boolean validateChildMethod(Validate v, Method method) throws Exception {
         return av.contains(method.getName()) || validateMethod(Optional.ofNullable(method.getAnnotation(annotationClass)).orElse(v), method);
     }
+
+    private <E extends RuntimeException>boolean validateChildAlternatives(Method method, E exception) throws InvalidFieldException{
+        Validate ann = method.getAnnotation(annotationClass);
+
+        if(isIgnorable(Validate.Ignore.ALTERNATIVES))
+            throw new InvalidFieldException(method);
+
+        return Arrays.stream(ann.alternatives())
+                .map(fetchMethod(mName ->  this.t.getClass().getDeclaredMethod(mName)))
+                .map(invokeAndHandle(
+                        m -> !validateChildMethod(ann, m) || (checkChildRequirements(m) && checkChildConflicts(m)),
+                        m -> false))
+                // lazy find first valid
+                .filter(valid -> valid)
+                .findFirst().orElseThrow(() -> exception);
+    }
+
 
     /**
      * Shorthand for {@link #checkConflicts(Method)}, in most case, required or conflictual object are not annotated

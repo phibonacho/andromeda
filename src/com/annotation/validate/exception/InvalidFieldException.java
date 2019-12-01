@@ -2,6 +2,7 @@ package com.annotation.validate.exception;
 
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class InvalidFieldException extends RuntimeException {
     public InvalidFieldException(String message) {
@@ -13,9 +14,6 @@ public class InvalidFieldException extends RuntimeException {
     }
 
     public InvalidFieldException(Method method, List<String> alternatives) {
-        this(method.getName().replaceAll("^(get|is|has)", "").toLowerCase() + " cannot be null" + (alternatives.size() > 0
-                ? ", set at least: " + alternatives.stream().map(name -> name.replaceAll("^(get|is|has)", "")).map(name -> name.substring(0, 1).toLowerCase().concat(name.substring(1))).reduce((s1, s2) ->s1 +" or "+s2).orElse("")
-                : " and has no viable alternatives")
-                + ".");
+        this("Illegal state, set at least one of these values: " + Stream.concat(alternatives.stream(), Stream.of(method.getName())).map(name -> name.replaceAll("^(get|is|has)", "")).map(name -> name.substring(0, 1).toLowerCase().concat(name.substring(1))).reduce((s1, s2) ->s1 +", "+s2).orElse(""));
     }
 }

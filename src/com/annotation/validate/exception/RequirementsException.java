@@ -14,4 +14,5 @@ public class RequirementsException extends RuntimeException {
                 : " do not have any requirements (then why this message?!)")
                 + ".");
     }
+
 }
