@@ -1,10 +1,7 @@
 package com.evaluators;
 
 import com.annotation.validate.Validate;
-import com.annotation.validate.exception.AnnotationException;
-import com.annotation.validate.exception.ConflictFieldException;
-import com.annotation.validate.exception.InvalidFieldException;
-import com.annotation.validate.exception.RequirementsException;
+import com.annotation.validate.exception.*;
 import com.annotation.validate.types.ValidateTypeInterface;
 
 import java.lang.reflect.Method;
@@ -14,13 +11,15 @@ import java.util.stream.Stream;
 
 public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean, Validate> {
     private Set<Validate.Ignore> ignoreList;
-    private Set<String> av;
+    private Map<String, ValidationState> av;
+
+    private enum ValidationState {VALID, NOT_SET, ON_EVALUATION, NOT_YET_EVALUATED};
 
     public ValidateEvaluator(Target t) {
         super(t);
         this.annotationClass = Validate.class;
         ignoreList = new HashSet<>();
-        av = new HashSet<>();
+        av = new HashMap<>();
     }
 
     public ValidateEvaluator ignoring(Validate.Ignore ...ignorable){
@@ -56,9 +55,6 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         return a -> !a.getAnnotation(annotationClass).mandatory();
     }
 
-
-    /* ----------------- PRIVATE METHODS ----------------- */
-
     /**
      * Validate method with a generic validate interface
      * @param v a Validate annotation use for validate method result
@@ -67,10 +63,16 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
      * @throws Exception if not valid
      */
     @SuppressWarnings("unchecked") // giusto perché mi fa schifo vederlo tutto giallo...
-    private Boolean validateMethod(Validate v, Method method) throws Exception {
-        if(ValidateTypeInterface.create(v.with()).validate(method.invoke(this.t)))
-            av.add(method.getName());
-        return true;
+    protected Boolean evaluateMethod(Validate v, Method method) throws Exception {
+        return ValidateTypeInterface.create(v.with()).validate(method.invoke(this.t));
+    }
+
+    /* ----------------- PRIVATE METHODS ----------------- */
+
+    private ValidationState check(Method method) throws InvalidFieldException{
+        String mName = method.getName();
+        return Optional.ofNullable(av.get(mName)).orElse(ValidationState.NOT_YET_EVALUATED);
+
     }
 
     /**
@@ -87,7 +89,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
      */
     private boolean validateAlternatives(Method method) throws InvalidFieldException{
         Validate ann = method.getAnnotation(annotationClass);
-
+        av.put(method.getName(), ValidationState.NOT_SET);
         if(isIgnorable(Validate.Ignore.ALTERNATIVES))
             throw new InvalidFieldException(method);
 
@@ -117,9 +119,10 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
                 .stream()
                 .map(fetchMethod(mName -> this.t.getClass().getDeclaredMethod(mName)))
                 .map(invokeAndHandle(method -> validateChildMethod(ann, method), () -> false))
-                // cerca il primo metodo con buona validazione ed esce per lanciare eccezione
                 .filter(valid -> valid)
                 .findFirst().orElse(false)) throw new ConflictFieldException(m, List.of(ann.conflicts()));
+        av.put(m.getName(), ValidationState.VALID);
+        av.forEach((key, value) -> System.err.println(key+" : "+value));
         return true;
     }
 
@@ -129,10 +132,18 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
      * @return true if all requirements are met
      * @throws RequirementsException if some requirements are not met
      */
-    private Boolean checkRequirements(Method method) throws RequirementsException {
+    private Boolean checkRequirements(Method method) throws RequirementsException, InvalidFieldException {
         Validate ann = method.getAnnotation(annotationClass);
-        if(isIgnorable(Validate.Ignore.REQUIREMENTS)
-                || List.of(ann.require())
+        av.put(method.getName(), ValidationState.ON_EVALUATION);
+        // skip, ignorable
+        if(isIgnorable(Validate.Ignore.REQUIREMENTS))
+            return true;
+
+        if(check(method) == ValidationState.VALID) // if method already validated return true
+            return true;
+
+        // check requirements for field
+        if(List.of(ann.require())
                 .stream()
                 // create a stream of require methods (not null)
                 .map(fetchMethod(mName -> this.t.getClass().getDeclaredMethod(mName)))
@@ -165,7 +176,6 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
                 .filter(valid -> valid)
                 .findFirst().orElseThrow(() -> exception);
     }
-
 
     /**
      * Shorthand for {@link #checkConflicts(Method)}, in most case, required or conflictual object are not annotated

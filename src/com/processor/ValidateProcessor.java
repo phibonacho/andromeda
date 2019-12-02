@@ -36,7 +36,7 @@ public class ValidateProcessor extends AbstractProcessor {
             //Generate a source file with a specified class name.
             try {
                 ValidateEvaluator validator = new ValidateEvaluator<>(e);
-                assert validator.validate();
+                assert validator.evaluate();
             } catch (Exception x) {
                 System.out.println("experienced error!");
                 processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,

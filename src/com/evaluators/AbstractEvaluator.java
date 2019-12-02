@@ -1,9 +1,6 @@
 package com.evaluators;
 
-import com.annotation.validate.exception.AnnotationException;
-import com.annotation.validate.exception.ConflictFieldException;
-import com.annotation.validate.exception.InvalidFieldException;
-import com.annotation.validate.exception.RequirementsException;
+import com.annotation.validate.exception.*;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -51,13 +48,15 @@ public abstract class AbstractEvaluator<Target, Control, A extends Annotation> {
                 return throwingFunction.accept(i);
             } catch (NullPointerException npe) {
                 return fallback.apply(i);
-            } catch (InvalidPropertiesFormatException e) {
+            } catch (InvalidPropertiesFormatException | InvalidFieldException e) {
                 throw new InvalidFieldException(e.getMessage());
             } catch (ConflictFieldException e) {
                 throw new ConflictFieldException(e.getMessage());
             } catch (RequirementsException e) {
                 throw new RequirementsException(e.getMessage());
-            }catch (Exception e) {
+            } catch (CyclicRequirementException e) {
+                throw new CyclicRequirementException(e.getMessage());
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         };
@@ -69,7 +68,7 @@ public abstract class AbstractEvaluator<Target, Control, A extends Annotation> {
                 return throwingFunction.accept(i);
             } catch (NullPointerException npe) {
                 return fallback.get();
-            } catch (InvalidPropertiesFormatException e) {
+            } catch (InvalidPropertiesFormatException | InvalidFieldException e) {
                 throw new InvalidFieldException(e.getMessage());
             } catch (RequirementsException e) {
                 throw new RequirementsException(e.getMessage());
