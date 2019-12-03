@@ -2,7 +2,7 @@ package com.processor;
 
 
 import com.annotation.validate.Validate;
-import com.evaluators.ValidateEvaluator;
+import com.annotation.validate.ValidateEvaluator;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;

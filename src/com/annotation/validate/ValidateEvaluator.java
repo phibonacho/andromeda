@@ -113,8 +113,6 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
      * @throws ConflictFieldException if conflicts are found
      */
     private Boolean checkConflicts(Method m) throws ConflictFieldException {
-        if(check(m) == ValidationState.VALID) // if method already validated return true
-            return true;
         Validate ann = m.getAnnotation(annotationClass);
         if(!isIgnorable(Validate.Ignore.CONFLICTS)
                 && List.of(ann.conflicts())
@@ -134,7 +132,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
      * @throws RequirementsException if some requirements are not met
      */
     private Boolean checkRequirements(Method method) throws RequirementsException, InvalidFieldException {
-        if(isIgnorable(Validate.Ignore.REQUIREMENTS) || check(method) == ValidationState.VALID) // if method already validated return true
+        if(isIgnorable(Validate.Ignore.REQUIREMENTS)) // if method already validated return true
             return true;
 
         Validate ann = method.getAnnotation(annotationClass);

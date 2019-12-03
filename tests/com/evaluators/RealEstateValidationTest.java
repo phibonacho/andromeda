@@ -6,23 +6,18 @@ import com.annotation.validate.exception.CyclicRequirementException;
 import com.annotation.validate.exception.InvalidFieldException;
 import com.annotation.validate.exception.RequirementsException;
 import com.testClasses.validate_evaluator_classes.*;
-import com.wikicasa.RealEstate;
 import org.junit.jupiter.api.Test;
 
-class ValidateEvaluatorTest {
+class RealEstateValidationTest {
 
     /* POSITIVE TEST */
 
     @Test
-    void successfulRealEstateValidation() throws Exception {
-        RealEstate re = new RealEstate();
+    void plainValidation() throws Exception {
+        SimpleObject so = new SimpleObject();
+        so.setProp("this is a valid string as it is not blank");
 
-        re.setExternalId("ext-ID");
-        re.setDescription("A valid description");
-        re.setRent(true);
-        re.setPriceRent(1d);
-
-        assert new ValidateEvaluator<>(re).evaluate();
+        assert new ValidateEvaluator<>(so).evaluate();
     }
 
     @Test
@@ -30,7 +25,7 @@ class ValidateEvaluatorTest {
         AlternativeObject ao = new AlternativeObject();
         ao.setAlternativeProp("this is a valid alternative string");
 
-        assert new com.annotation.validate.ValidateEvaluator<>(ao).evaluate();
+        assert new ValidateEvaluator<>(ao).evaluate();
     }
 
     @Test
@@ -39,7 +34,7 @@ class ValidateEvaluatorTest {
         ro.setProp("this property require another field initialized to be parsed as valid");
         ro.setRequiredProp(12d);
 
-        assert new com.annotation.validate.ValidateEvaluator<>(ro).evaluate();
+        assert new ValidateEvaluator<>(ro).evaluate();
     }
 
     @Test
@@ -47,7 +42,7 @@ class ValidateEvaluatorTest {
         ConflictsObject co = new ConflictsObject();
         co.setConflictProp("this property pass validation as its conflicts is not set");
 
-        assert new com.annotation.validate.ValidateEvaluator<>(co).evaluate();
+        assert new ValidateEvaluator<>(co).evaluate();
     }
 
     /* NEGATIVE TEST */
@@ -55,7 +50,7 @@ class ValidateEvaluatorTest {
     void plainValidationFail() {
         try {
             SimpleObject so = new SimpleObject();
-            assert new com.annotation.validate.ValidateEvaluator<>(so).evaluate();
+            assert new ValidateEvaluator<>(so).evaluate();
         } catch (Exception ife) {
             assert ife instanceof InvalidFieldException;
             return;
@@ -67,7 +62,7 @@ class ValidateEvaluatorTest {
     void validationAlternativeFail() {
         try {
             AlternativeObject ao = new AlternativeObject();
-            assert new com.annotation.validate.ValidateEvaluator<>(ao).evaluate();
+            assert new ValidateEvaluator<>(ao).evaluate();
         } catch (Exception e) {
             assert e instanceof InvalidFieldException;
             return;
@@ -80,7 +75,7 @@ class ValidateEvaluatorTest {
         try {
             FailRequirementsObject fro = new FailRequirementsObject();
             fro.setProp("this property require another field initialized to be parsed as valid");
-            assert new com.annotation.validate.ValidateEvaluator<>(fro).evaluate();
+            assert new ValidateEvaluator<>(fro).evaluate();
         } catch (Exception e) {
             assert e instanceof RequirementsException;
             return;
@@ -127,7 +122,7 @@ class ValidateEvaluatorTest {
     @Test
     void cascadeRequirements() {
         CascadeRequirementsObject cro = new CascadeRequirementsObject();
-        com.annotation.validate.ValidateEvaluator evaluator = new com.annotation.validate.ValidateEvaluator<>(cro);
+        ValidateEvaluator evaluator = new ValidateEvaluator<>(cro);
         cro.setProp("this is a mandatory property");
 
         System.out.println("first validation");

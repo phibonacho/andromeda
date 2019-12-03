@@ -1,4 +1,4 @@
-package com.testClasses;
+package com.testClasses.validate_evaluator_classes;
 
 import com.annotation.validate.Validate;
 import com.annotation.validate.types.StringValue;
