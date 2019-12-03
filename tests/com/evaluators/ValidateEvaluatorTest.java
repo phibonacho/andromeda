@@ -126,7 +126,7 @@ class ValidateEvaluatorTest {
         System.out.println("first validation");
 
         try {
-            evaluator.evaluate();
+            assert evaluator.evaluate();
         } catch (Exception e) {
             System.out.println(e.getMessage());
             assert e instanceof RequirementsException;
@@ -136,7 +136,7 @@ class ValidateEvaluatorTest {
 
         System.out.println("second validation");
         try {
-            evaluator.evaluate();
+            assert evaluator.evaluate();
         } catch (Exception e) {
             System.out.println(e.getMessage());
             assert e instanceof RequirementsException;
@@ -146,16 +146,17 @@ class ValidateEvaluatorTest {
 
         System.out.println("third validation");
         try {
-            evaluator.evaluate();
+            assert evaluator.evaluate();
         } catch (Exception e) {
             System.out.println(e.getMessage());
             assert e instanceof RequirementsException;
         }
+
         cro.setReq3("this is a field required from req2");
 
         System.out.println("fourth validation");
         try {
-            evaluator.evaluate();
+           assert evaluator.evaluate();
         } catch (Exception e) {
             System.out.println(e.getMessage());
             assert e instanceof RequirementsException;

@@ -42,7 +42,15 @@ public abstract class AbstractEvaluator<Target, Control, A extends Annotation> {
         R accept(I s) throws E;
     }
 
-    protected <I,R> Function<I, R> invokeAndHandle(ThrowingFunction<I, R, Exception> throwingFunction, Function<I, R> fallback) throws InvalidFieldException {
+    /**
+     * @param throwingFunction a function capable of throwing exceptions
+     * @param fallback a function to call in case of failure
+     * @param <I> an input type
+     * @param <R> a return type
+     * @return the result of the evaluation of throwing function or fallback
+     * @throws InvalidFieldException if evaluation non-null but invalid
+     */
+    protected <I,R> Function<I, R> invokeOnNull(ThrowingFunction<I, R, Exception> throwingFunction, Function<I, R> fallback) throws InvalidFieldException {
         return i -> {
             try {
                 return throwingFunction.accept(i);
@@ -62,7 +70,10 @@ public abstract class AbstractEvaluator<Target, Control, A extends Annotation> {
         };
     }
 
-    protected <I,R>Function<I, R> invokeAndHandle(ThrowingFunction<I, R, Exception> throwingFunction, Supplier<R> fallback) throws InvalidFieldException {
+    /**
+     * Same as {@link #invokeOnNull(ThrowingFunction, Function)} but takes a supplier instead of a function (no params needed)
+     * */
+    protected <I,R>Function<I, R> invokeOnNull(ThrowingFunction<I, R, Exception> throwingFunction, Supplier<R> fallback) throws InvalidFieldException {
         return i -> {
             try {
                 return throwingFunction.accept(i);

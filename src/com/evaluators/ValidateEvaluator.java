@@ -98,7 +98,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
 
         return Arrays.stream(ann.alternatives())
                 .map(fetchMethod(mName ->  this.t.getClass().getDeclaredMethod(mName)))
-                .map(invokeAndHandle(
+                .map(invokeOnNull(
                         m -> !validateChildMethod(ann, m) || (checkChildRequirements(m) && checkChildConflicts(m)),
                         m -> false))
                 // lazy find first valid
@@ -120,7 +120,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
                 && List.of(ann.conflicts())
                 .stream()
                 .map(fetchMethod(mName -> this.t.getClass().getDeclaredMethod(mName)))
-                .map(invokeAndHandle(method -> validateChildMethod(ann, method), () -> false))
+                .map(invokeOnNull(method -> validateChildMethod(ann, method), () -> false))
                 .filter(valid -> valid)
                 .findFirst().orElse(false)) throw new ConflictFieldException(m, List.of(ann.conflicts()));
         av.put(m.getName(), ValidationState.VALID);
@@ -146,7 +146,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
                 // create a stream of require methods (not null)
                 .map(fetchMethod(mName -> this.t.getClass().getDeclaredMethod(mName)))
                 // try to validate methods with their own annotation
-                .map(invokeAndHandle(m -> !validateChildMethod(ann, m) || checkChildRequirements(m) && checkChildConflicts(m), m -> validateChildAlternatives(m, new RequirementsException(method, List.of(ann.require())))))
+                .map(invokeOnNull(m -> !validateChildMethod(ann, m) || checkChildRequirements(m) && checkChildConflicts(m), m -> validateChildAlternatives(m, new RequirementsException(method, List.of(ann.require())))))
                 .filter(valid -> !valid)
                 .findFirst().orElse(true)) return true;
         throw new RequirementsException(method, List.of(ann.require()));
@@ -170,7 +170,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
 
         return Arrays.stream(ann.alternatives())
                 .map(fetchMethod(mName ->  this.t.getClass().getDeclaredMethod(mName)))
-                .map(invokeAndHandle(
+                .map(invokeOnNull(
                         m -> !validateChildMethod(ann, m) || (checkChildRequirements(m) && checkChildConflicts(m)),
                         m -> false))
                 // lazy find first valid
