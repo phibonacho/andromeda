@@ -6,7 +6,6 @@ import com.annotation.validate.exception.InvalidFieldException;
 import com.annotation.validate.exception.RequirementsException;
 import com.testClasses.*;
 import org.junit.jupiter.api.Test;
-import org.junit.platform.engine.support.hierarchical.ExclusiveResource;
 
 class ValidateEvaluatorTest {
 
@@ -108,6 +107,7 @@ class ValidateEvaluatorTest {
             cro.setProp1("require prop");
             assert new ValidateEvaluator<>(cro).evaluate();
         } catch (Exception e){
+            System.err.println(e.getMessage());
             assert e instanceof CyclicRequirementException;
             return;
         }
@@ -123,36 +123,41 @@ class ValidateEvaluatorTest {
         ValidateEvaluator evaluator = new ValidateEvaluator<>(cro);
         cro.setProp("this is a mandatory property");
 
+        System.out.println("first validation");
+
         try {
             evaluator.evaluate();
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+            System.out.println(e.getMessage());
             assert e instanceof RequirementsException;
         }
 
         cro.setReq1("this is a field required from prop");
 
+        System.out.println("second validation");
         try {
             evaluator.evaluate();
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+            System.out.println(e.getMessage());
             assert e instanceof RequirementsException;
         }
 
         cro.setReq2("this is a field required from req1");
 
+        System.out.println("third validation");
         try {
             evaluator.evaluate();
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+            System.out.println(e.getMessage());
             assert e instanceof RequirementsException;
         }
         cro.setReq3("this is a field required from req2");
 
+        System.out.println("fourth validation");
         try {
             evaluator.evaluate();
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+            System.out.println(e.getMessage());
             assert e instanceof RequirementsException;
         }
     }
