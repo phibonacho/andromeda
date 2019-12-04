@@ -6,6 +6,9 @@ import com.annotation.validate.exception.CyclicRequirementException;
 import com.annotation.validate.exception.InvalidFieldException;
 import com.annotation.validate.exception.RequirementsException;
 import com.testClasses.validate_evaluator_classes.*;
+import com.wikicasa.Address;
+import com.wikicasa.City;
+import com.wikicasa.RealEstate;
 import org.junit.jupiter.api.Test;
 
 class RealEstateValidationTest {
@@ -13,11 +16,28 @@ class RealEstateValidationTest {
     /* POSITIVE TEST */
 
     @Test
-    void plainValidation() throws Exception {
-        SimpleObject so = new SimpleObject();
-        so.setProp("this is a valid string as it is not blank");
+    void successfulRealEstateValidation() throws Exception {
+        RealEstate re = new RealEstate();
+        Address a = new Address();
+        City c = new City();
 
-        assert new ValidateEvaluator<>(so).evaluate();
+        re.setExternalId("ext-ID");
+        re.setDescription("A valid description");
+        re.setRent(true);
+        re.setPriceRent(1d);
+        re.setSqm(1d);
+        re.setAddress(a);
+
+        a.setStreet("a valid street");
+        a.setStreetNumber("a valid streetNumber");
+        a.setZip("a valid zip");
+        a.setLatitude(42d);
+        a.setLongitude(12d);
+        a.setCity(c);
+
+        c.setIstatCode(1L);
+
+        assert new ValidateEvaluator<>(re).evaluate();
     }
 
     @Test

@@ -16,28 +16,11 @@ class ValidateEvaluatorTest {
     /* POSITIVE TEST */
 
     @Test
-    void successfulRealEstateValidation() throws Exception {
-        RealEstate re = new RealEstate();
-        Address a = new Address();
-        City c = new City();
+    void plainValidation() throws Exception {
+        SimpleObject so = new SimpleObject();
+        so.setProp("this is a valid string as it is not blank");
 
-        re.setExternalId("ext-ID");
-        re.setDescription("A valid description");
-        re.setRent(true);
-        re.setPriceRent(1d);
-        re.setSqm(1d);
-        re.setAddress(a);
-
-        a.setStreet("a valid street");
-        a.setStreetNumber("a valid streetNumber");
-        a.setZip("a valid zip");
-        a.setLatitude(42d);
-        a.setLongitude(12d);
-        a.setCity(c);
-
-        c.setIstatCode(1L);
-
-        assert new ValidateEvaluator<>(re).evaluate();
+        assert new ValidateEvaluator<>(so).evaluate();
     }
 
     @Test
