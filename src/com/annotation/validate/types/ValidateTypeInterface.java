@@ -8,5 +8,5 @@ public interface ValidateTypeInterface<ControlType, GuardType> {
         return vti.getDeclaredConstructor().newInstance();
     }
 
-    ControlType validate(GuardType guard) throws InvalidPropertiesFormatException;
+    ControlType validate(GuardType guard) throws Exception;
 }

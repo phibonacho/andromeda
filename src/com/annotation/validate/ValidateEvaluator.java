@@ -90,11 +90,12 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
     private boolean validateAlternatives(Method method) throws InvalidFieldException{
         Validate ann = method.getAnnotation(annotationClass);
         av.put(method.getName(), ValidationState.NOT_SET);
-        if(isIgnorable(Validate.Ignore.ALTERNATIVES))
-            throw new InvalidFieldException(method);
 
         if(isIgnorable(Validate.Ignore.MANDATORY) || !ann.mandatory())
             return true;
+
+        if(isIgnorable(Validate.Ignore.ALTERNATIVES) || ann.alternatives().length == 0)
+            throw new InvalidFieldException(method);
 
         return Arrays.stream(ann.alternatives())
                 .map(fetchMethod(mName ->  this.t.getClass().getDeclaredMethod(mName)))

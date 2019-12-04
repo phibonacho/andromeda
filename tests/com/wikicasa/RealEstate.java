@@ -1,10 +1,7 @@
 package com.wikicasa;
 
 import com.annotation.validate.Validate;
-import com.annotation.validate.types.BooleanValue;
-import com.annotation.validate.types.DoubleValue;
-import com.annotation.validate.types.LongValue;
-import com.annotation.validate.types.StringValue;
+import com.annotation.validate.types.*;
 
 public class RealEstate {
     private String externalId;
@@ -21,6 +18,7 @@ public class RealEstate {
     private boolean exclusive;
     private double sqm;
     private double ipe;
+    private Address address;
 
     @Validate(with = StringValue.class, mandatory = true)
     public String getExternalId() {
@@ -75,7 +73,7 @@ public class RealEstate {
         this.auction = auction;
     }
 
-    @Validate(with = DoubleValue.class)
+    @Validate(with = DPositive.class)
     public double getPriceRent() {
         return priceRent;
     }
@@ -84,7 +82,7 @@ public class RealEstate {
         this.priceRent = priceRent;
     }
 
-    @Validate(with = DoubleValue.class)
+    @Validate(with = DPositive.class)
     public double getPriceSale() {
         return priceSale;
     }
@@ -128,7 +126,7 @@ public class RealEstate {
         this.exclusive = exclusive;
     }
 
-    @Validate(with = DoubleValue.class, mandatory = true)
+    @Validate(with = DPositive.class, mandatory = true)
     public double getSqm() {
         return sqm;
     }
@@ -144,5 +142,14 @@ public class RealEstate {
 
     public void setIpe(double ipe) {
         this.ipe = ipe;
+    }
+
+    @Validate(with = NestedVal.class, mandatory = true)
+    public Address getAddress() {
+        return address;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
     }
 }
