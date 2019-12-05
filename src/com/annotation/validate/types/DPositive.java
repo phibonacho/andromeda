@@ -4,8 +4,8 @@ import java.util.InvalidPropertiesFormatException;
 
 public class DPositive extends DoubleValue {
     @Override
-    public Boolean check(Number guard) throws InvalidPropertiesFormatException {
-        if(!super.check(guard) || guard.doubleValue() == 0) throw new NullPointerException();
+    public Boolean check(Double guard) throws InvalidPropertiesFormatException {
+        if(!super.check(guard) || guard == 0) throw new NullPointerException();
         return true;
     }
 }

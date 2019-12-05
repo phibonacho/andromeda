@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.InvalidPropertiesFormatException;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public abstract class AbstractEvaluator<Target, Control, A extends Annotation> {
@@ -45,12 +46,11 @@ public abstract class AbstractEvaluator<Target, Control, A extends Annotation> {
     /**
      * @param throwingFunction a function capable of throwing exceptions
      * @param fallback a function to call in case of failure
-     * @param <I> an input type
      * @param <R> a return type
      * @return the result of the evaluation of throwing function or fallback
      * @throws InvalidFieldException if evaluation non-null but invalid
      */
-    protected <I,R> Function<I, R> invokeOnNull(ThrowingFunction<I, R, Exception> throwingFunction, Function<I, R> fallback) throws InvalidFieldException {
+    protected <R> Function<Method, R> invokeOnNull(ThrowingFunction<Method, R, Exception> throwingFunction, Function<Method, R> fallback) throws InvalidFieldException {
         return i -> {
             try {
                 return throwingFunction.accept(i);
@@ -58,6 +58,10 @@ public abstract class AbstractEvaluator<Target, Control, A extends Annotation> {
                 return fallback.apply(i);
             } catch (InvalidPropertiesFormatException | InvalidFieldException e) {
                 throw new InvalidFieldException(e.getMessage());
+            } catch (InvalidNestedFieldException e) {
+                throw new InvalidFieldException(displayName(i.getName()) + e.getMessage());
+            } catch (InvalidCollectionFieldException e) {
+                throw new InvalidFieldException("Collection " + displayName(i.getName()) + "[] : " + e.getMessage());
             } catch (ConflictFieldException e) {
                 throw new ConflictFieldException(e.getMessage());
             } catch (RequirementsException e) {
@@ -73,7 +77,7 @@ public abstract class AbstractEvaluator<Target, Control, A extends Annotation> {
     /**
      * Same as {@link #invokeOnNull(ThrowingFunction, Function)} but takes a supplier instead of a function (no params needed)
      * */
-    protected <I,R>Function<I, R> invokeOnNull(ThrowingFunction<I, R, Exception> throwingFunction, Supplier<R> fallback) throws InvalidFieldException {
+    protected <R>Function<Method, R> invokeOnNull(ThrowingFunction<Method, R, Exception> throwingFunction, Supplier<R> fallback) throws InvalidFieldException {
         return i -> {
             try {
                 return throwingFunction.accept(i);
@@ -81,6 +85,10 @@ public abstract class AbstractEvaluator<Target, Control, A extends Annotation> {
                 return fallback.get();
             } catch (InvalidPropertiesFormatException | InvalidFieldException e) {
                 throw new InvalidFieldException(e.getMessage());
+            } catch (InvalidNestedFieldException e) {
+                throw new InvalidFieldException(displayName(i.getName()) + e.getMessage());
+            } catch (InvalidCollectionFieldException e) {
+                throw new InvalidFieldException("Collection " + displayName(i.getName()) + "[] : " + e.getMessage());
             } catch (RequirementsException e) {
                 throw new RequirementsException(e.getMessage());
             } catch (IllegalArgumentException e) {
@@ -108,4 +116,9 @@ public abstract class AbstractEvaluator<Target, Control, A extends Annotation> {
             }
         };
     }
+
+    private String displayName(String method){
+        return Stream.of(method).map(name -> name.replaceAll("^(get|is|has)", "")).map(name -> name.substring(0, 1).toLowerCase().concat(name.substring(1))).collect(Collectors.joining());
+    }
+
 }

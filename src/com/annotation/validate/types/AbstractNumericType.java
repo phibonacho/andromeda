@@ -2,10 +2,10 @@ package com.annotation.validate.types;
 
 import java.util.InvalidPropertiesFormatException;
 
-public abstract class AbstractNumericType extends AbstractValidateType<Number> {
+public abstract class AbstractNumericType<T> extends AbstractValidateType<T> {
 
     @Override
-    public Boolean check(Number guard) throws InvalidPropertiesFormatException {
+    public Boolean check(T guard) throws InvalidPropertiesFormatException {
         if(guard == null) throw new InvalidPropertiesFormatException("null argument");
         return true;
     }

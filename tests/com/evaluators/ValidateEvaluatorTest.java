@@ -6,10 +6,10 @@ import com.annotation.validate.exception.CyclicRequirementException;
 import com.annotation.validate.exception.InvalidFieldException;
 import com.annotation.validate.exception.RequirementsException;
 import com.testClasses.validate_evaluator_classes.*;
-import com.wikicasa.Address;
-import com.wikicasa.City;
-import com.wikicasa.RealEstate;
 import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 class ValidateEvaluatorTest {
 
@@ -183,6 +183,18 @@ class ValidateEvaluatorTest {
             return;
         }
         assert false;
+    }
+
+    @Test
+    void listCollectionTest() throws Exception {
+        CollectionObject co = new CollectionObject();
+        List<SimpleObject> l = new ArrayList<>();
+        SimpleObject so = new SimpleObject();
+//        so.setProp("ciao");
+        l.add(so);
+        co.setMyPrivateList(l);
+        ValidateEvaluator<CollectionObject> ve = new ValidateEvaluator<>(co);
+        assert ve.evaluate();
     }
 
 }

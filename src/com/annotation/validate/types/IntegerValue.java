@@ -1,6 +1,6 @@
 package com.annotation.validate.types;
 
-public class DoubleValue extends AbstractNumericType<Double> {
+public class IntegerValue extends AbstractNumericType<Integer> {
     @Override
     public Boolean isInstance(Object obj) {
         if(!(obj instanceof Double)) throw new IllegalArgumentException(obj.getClass().getName() + " do not match Double");
