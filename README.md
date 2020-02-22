@@ -1,2 +1,2 @@
 # andromeda
-Contraint validator annotation system
+Constraint validation annotations.
