@@ -7,7 +7,7 @@ public class ConflictsObject {
     private String prop;
     private String conflictProp;
 
-    @Validate(with = StringValue.class, conflicts = "getConflictProp")
+    @Validate(with = StringValue.class, conflicts = "conflictProp")
     public String getProp() {
         return prop;
     }
@@ -16,7 +16,7 @@ public class ConflictsObject {
         this.prop = prop;
     }
 
-    @Validate(with = StringValue.class, conflicts = "getProp")
+    @Validate(with = StringValue.class, conflicts = "prop")
     public String getConflictProp() {
         return conflictProp;
     }

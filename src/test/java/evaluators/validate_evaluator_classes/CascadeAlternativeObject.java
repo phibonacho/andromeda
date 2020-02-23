@@ -9,7 +9,7 @@ public class CascadeAlternativeObject {
     private String aProp1;
 
 
-    @Validate(with = StringValue.class, mandatory = true, alternatives = "getAProp")
+    @Validate(with = StringValue.class, mandatory = true, alternatives = "aProp")
     public String getProp() {
         return prop;
     }
@@ -18,12 +18,12 @@ public class CascadeAlternativeObject {
         this.prop = prop;
     }
 
-    @Validate(with = StringValue.class, alternatives = "getAProp1")
+    @Validate(with = StringValue.class, alternatives = "aProp1")
     public String getAProp() {
         return aProp;
     }
 
-    public void setAlternativeProp(String alternativeProp) {
+    public void setAProp(String alternativeProp) {
         this.aProp = alternativeProp;
     }
 

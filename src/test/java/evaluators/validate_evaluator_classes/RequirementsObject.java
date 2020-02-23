@@ -8,7 +8,7 @@ public class RequirementsObject {
     private String prop;
     private Double requiredProp;
 
-    @Validate(with = StringValue.class, require = "getRequiredProp")
+    @Validate(with = StringValue.class, require = "requiredProp")
     public String getProp() {
         return prop;
     }

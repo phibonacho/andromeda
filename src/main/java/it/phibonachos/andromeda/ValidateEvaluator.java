@@ -3,7 +3,9 @@ package it.phibonachos.andromeda;
 import it.phibonachos.andromeda.exception.*;
 import it.phibonachos.andromeda.types.ValidateTypeInterface;
 import it.phibonachos.evaluators.AbstractEvaluator;
+import it.phibonachos.utils.FunctionalUtils;
 
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Function;
@@ -78,7 +80,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
      * @throws InvalidFieldException if evaluation non-null but invalid
      */
     @Override
-    protected  <R> Function<Method, R> invokeOnNull(ThrowingFunction<Method, R, Exception> throwingFunction, Function<Method, R> fallback) throws InvalidFieldException {
+    protected  <R> Function<Method, R> invokeOnNull(FunctionalUtils.ThrowingFunction<Method, R, Exception> throwingFunction, Function<Method, R> fallback) throws InvalidFieldException {
         return i -> {
             try {
                 return throwingFunction.accept(i);
@@ -103,10 +105,10 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
     }
 
     /**
-     * Same as {@link #invokeOnNull(ThrowingFunction, Function)} but takes a supplier instead of a function (no params needed)
+     * Same as {@link #invokeOnNull(FunctionalUtils.ThrowingFunction, Function)} but takes a supplier instead of a function (no params needed)
      * */
     @Override
-    protected  <R>Function<Method, R> invokeOnNull(ThrowingFunction<Method, R, Exception> throwingFunction, Supplier<R> fallback) throws InvalidFieldException {
+    protected  <R>Function<Method, R> invokeOnNull(FunctionalUtils.ThrowingFunction<Method, R, Exception> throwingFunction, Supplier<R> fallback) throws InvalidFieldException {
         return i -> {
             try {
                 return throwingFunction.accept(i);
@@ -159,7 +161,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
             throw new InvalidFieldException(method);
 
         return Arrays.stream(ann.alternatives())
-                .map(fetchMethod(mName ->  this.t.getClass().getDeclaredMethod(mName)))
+                .map(FunctionalUtils.tryCatch(mName ->  new PropertyDescriptor(mName, this.t.getClass()).getReadMethod()))
                 .map(invokeOnNull(
                         m -> !validateChildMethod(ann, m) || (checkChildRequirements(m) && checkChildConflicts(m)),
                         m -> false))
@@ -179,7 +181,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         if(!isIgnorable(Validate.Ignore.CONFLICTS)
                 && List.of(ann.conflicts())
                 .stream()
-                .map(fetchMethod(mName -> this.t.getClass().getDeclaredMethod(mName)))
+                .map(FunctionalUtils.tryCatch(mName ->  new PropertyDescriptor(mName, this.t.getClass()).getReadMethod()))
                 .map(invokeOnNull(method -> validateChildMethod(ann, method), () -> false))
                 .filter(valid -> valid)
                 .findFirst().orElse(false)) throw new ConflictFieldException(m, List.of(ann.conflicts()));
@@ -204,7 +206,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         if(List.of(ann.require())
                 .stream()
                 // create a stream of require methods (not null)
-                .map(fetchMethod(mName -> this.t.getClass().getDeclaredMethod(mName)))
+                .map(FunctionalUtils.tryCatch(mName ->  new PropertyDescriptor(mName, this.t.getClass()).getReadMethod()))
                 // try to validate methods with their own annotation
                 .map(invokeOnNull(m -> !validateChildMethod(ann, m) || checkChildRequirements(m) && checkChildConflicts(m), m -> validateChildAlternatives(m, new RequirementsException(method, List.of(ann.require())))))
                 .filter(valid -> !valid)
@@ -229,7 +231,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
             throw new InvalidFieldException(method);
 
         return Arrays.stream(ann.alternatives())
-                .map(fetchMethod(mName ->  this.t.getClass().getDeclaredMethod(mName)))
+                .map(FunctionalUtils.tryCatch(mName ->  new PropertyDescriptor(mName, this.t.getClass()).getReadMethod()))
                 .map(invokeOnNull(
                         m -> !validateChildMethod(ann, m) || (checkChildRequirements(m) && checkChildConflicts(m)),
                         m -> false))
@@ -250,7 +252,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
      * Shorthand for {@link #checkRequirements(Method)}, in most case, required or conflictual object are not annotated
      * this means that they have no specific requirements or have same as parent
      */
-    private Boolean checkChildRequirements(Method method) throws RequirementsException, CyclicRequirementException {
+    private Boolean checkChildRequirements(Method method) throws RequirementsException {
         if(av.containsKey(method.getName()) && av.get(method.getName()).equals(ValidationState.ON_EVALUATION))
             throw new CyclicRequirementException("Detected cyclic dependency with " + method.getName());
         return method.getAnnotation(annotationClass) == null || checkRequirements(method);
