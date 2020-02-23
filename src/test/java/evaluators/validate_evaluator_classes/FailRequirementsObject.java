@@ -8,7 +8,7 @@ public class FailRequirementsObject {
     private String prop;
     private Double requiredProp;
 
-    @Validate(with = StringValue.class, mandatory = true, require = "getRequiredProp")
+    @Validate(with = StringValue.class, mandatory = true, require = "requiredProp")
     public String getProp() {
         return prop;
     }

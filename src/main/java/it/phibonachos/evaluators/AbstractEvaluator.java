@@ -1,6 +1,7 @@
 package it.phibonachos.evaluators;
 
 import it.phibonachos.andromeda.exception.InvalidFieldException;
+import it.phibonachos.utils.FunctionalUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -36,11 +37,6 @@ public abstract class AbstractEvaluator<Target, Control, A extends Annotation> {
 
     protected abstract Function<Method, Control> validateAlgorithm();
 
-    @FunctionalInterface
-    protected interface ThrowingFunction<I, R, E extends Exception> {
-        R accept(I s) throws E;
-    }
-
     /**
      * @param throwingFunction a function capable of throwing exceptions
      * @param fallback a function to call in case of failure
@@ -48,12 +44,12 @@ public abstract class AbstractEvaluator<Target, Control, A extends Annotation> {
      * @return the result of the evaluation of throwing function or fallback
      * @throws InvalidFieldException if evaluation non-null but invalid
      */
-    protected abstract  <R> Function<Method, R> invokeOnNull(ThrowingFunction<Method, R, Exception> throwingFunction, Function<Method, R> fallback) throws InvalidFieldException;
+    protected abstract  <R> Function<Method, R> invokeOnNull(FunctionalUtils.ThrowingFunction<Method, R, Exception> throwingFunction, Function<Method, R> fallback) throws InvalidFieldException;
 
     /**
-     * Same as {@link #invokeOnNull(ThrowingFunction, Function)} but takes a supplier instead of a function (no params needed)
+     * Same as {@link #invokeOnNull(FunctionalUtils.ThrowingFunction, Function)} but takes a supplier instead of a function (no params needed)
      * */
-    protected abstract  <R>Function<Method, R> invokeOnNull(ThrowingFunction<Method, R, Exception> throwingFunction, Supplier<R> fallback) throws InvalidFieldException;
+    protected abstract  <R>Function<Method, R> invokeOnNull(FunctionalUtils.ThrowingFunction<Method, R, Exception> throwingFunction, Supplier<R> fallback) throws InvalidFieldException;
 
 
     /**
@@ -61,7 +57,8 @@ public abstract class AbstractEvaluator<Target, Control, A extends Annotation> {
      * @return the method of the given class
      * @throws RuntimeException if method is not found or other exceptions are catch
      */
-    protected Function<? super String, Method> fetchMethod(ThrowingFunction<String, Method, NoSuchMethodException> throwingFunction) throws RuntimeException{
+    @Deprecated
+    protected Function<? super String, Method> fetchMethod(FunctionalUtils.ThrowingFunction<String, Method, NoSuchMethodException> throwingFunction) throws RuntimeException{
         return i -> {
             try {
                 return throwingFunction.accept(i);
