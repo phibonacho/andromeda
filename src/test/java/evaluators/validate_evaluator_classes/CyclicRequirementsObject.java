@@ -7,7 +7,7 @@ public class CyclicRequirementsObject {
     private String prop;
     private String prop1;
 
-    @Validate(with = StringValue.class, require = "getProp1")
+    @Validate(with = StringValue.class, require = "prop1")
     public String getProp() {
         return prop;
     }
@@ -16,7 +16,7 @@ public class CyclicRequirementsObject {
         this.prop = prop;
     }
 
-    @Validate(with = StringValue.class, require = "getProp")
+    @Validate(with = StringValue.class, require = "prop")
     public String getProp1() {
         return prop1;
     }
