@@ -1,5 +1,7 @@
 package phb.annotation.validate.types;
 
+import phb.annotation.validate.exception.InvalidFieldException;
+
 public abstract class AbstractValidateType<GuardType> implements ValidateTypeInterface<Boolean, GuardType> {
 
     protected AbstractValidateType() {}

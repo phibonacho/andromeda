@@ -184,9 +184,6 @@ public class ValidateEvaluatorTest {
     public void listCollectionTest() throws Exception {
         CollectionObject co = new CollectionObject();
         List<SimpleObject> l = new ArrayList<>();
-        SimpleObject so = new SimpleObject();
-        so.setProp("ciao");
-        l.add(so);
         co.setMyPrivateList(l);
         ValidateEvaluator<CollectionObject> ve = new ValidateEvaluator<>(co);
         assert ve.validate();

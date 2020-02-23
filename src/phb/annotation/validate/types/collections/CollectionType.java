@@ -1,12 +1,13 @@
-package phb.annotation.validate.types;
+package phb.annotation.validate.types.collections;
 import phb.annotation.validate.ValidateEvaluator;
 import phb.annotation.validate.exception.InvalidCollectionFieldException;
 import phb.annotation.validate.exception.InvalidFieldException;
+import phb.annotation.validate.types.AbstractValidateType;
 import phb.utils.FunctionalUtils;
 
 import java.util.Collection;
 
-public class AbstractCollectionType<T, C extends Collection<T>> extends AbstractValidateType<C> {
+public class CollectionType<T, C extends Collection<T>> extends AbstractValidateType<C> {
 
     @Override
     public Boolean isInstance(Object obj) {
@@ -19,13 +20,7 @@ public class AbstractCollectionType<T, C extends Collection<T>> extends Abstract
         if(guard == null)
             throw new InvalidCollectionFieldException(" cannot be null.");
 
-        if(guard.size() == 0)
-            throw new InvalidCollectionFieldException(" is empty.");
-
-        return guard.stream()
-                .map(FunctionalUtils.tryCatch(item -> new ValidateEvaluator<>(item).validate()))
-                .reduce((a, b) -> a && b)
-                .orElse(false);
+        return true;
     }
 
 }

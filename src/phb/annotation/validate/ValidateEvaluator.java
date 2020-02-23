@@ -84,18 +84,18 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
                 return throwingFunction.accept(i);
             } catch (NullPointerException npe) {
                 return fallback.apply(i);
+            } catch (InvalidCollectionFieldException e) {
+                throw new InvalidFieldException("Collection " + displayName(i.getName()) + "[] : " + e.getMessage());
             } catch (InvalidPropertiesFormatException | InvalidFieldException e) {
                 throw new InvalidFieldException(e.getMessage());
             } catch (InvalidNestedFieldException e) {
                 throw new InvalidFieldException(displayName(i.getName()) + e.getMessage());
-            } catch (InvalidCollectionFieldException e) {
-                throw new InvalidFieldException("Collection " + displayName(i.getName()) + "[] : " + e.getMessage());
             } catch (ConflictFieldException e) {
                 throw new ConflictFieldException(e.getMessage());
-            } catch (RequirementsException e) {
-                throw new RequirementsException(e.getMessage());
             } catch (CyclicRequirementException e) {
                 throw new CyclicRequirementException(e.getMessage().contains(i.getName()) ? e.getMessage() : i.getName() + " : " + e.getMessage());
+            } catch (RequirementsException e) {
+                throw new RequirementsException(e.getMessage());
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -112,12 +112,12 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
                 return throwingFunction.accept(i);
             } catch (NullPointerException npe) {
                 return fallback.get();
+            } catch (InvalidCollectionFieldException e) {
+                throw new InvalidFieldException("Collection " + displayName(i.getName()) + "[] : " + e.getMessage());
             } catch (InvalidPropertiesFormatException | InvalidFieldException e) {
                 throw new InvalidFieldException(e.getMessage());
             } catch (InvalidNestedFieldException e) {
                 throw new InvalidFieldException(displayName(i.getName()) + e.getMessage());
-            } catch (InvalidCollectionFieldException e) {
-                throw new InvalidFieldException("Collection " + displayName(i.getName()) + "[] : " + e.getMessage());
             } catch (RequirementsException e) {
                 throw new RequirementsException(e.getMessage());
             } catch (IllegalArgumentException e) {

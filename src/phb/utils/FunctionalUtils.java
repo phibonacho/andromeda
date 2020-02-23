@@ -3,7 +3,6 @@ package phb.utils;
 import phb.annotation.validate.exception.InvalidCollectionFieldException;
 import phb.annotation.validate.exception.InvalidFieldException;
 import phb.annotation.validate.exception.InvalidNestedFieldException;
-import phb.annotation.validate.types.AbstractCollectionType;
 
 import java.util.function.Function;
 
