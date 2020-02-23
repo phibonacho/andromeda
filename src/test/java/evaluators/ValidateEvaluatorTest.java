@@ -174,7 +174,6 @@ public class ValidateEvaluatorTest {
 
             assert new ValidateEvaluator<>(cao).validate();
         } catch (Exception e){
-            e.printStackTrace();
             assert e instanceof InvalidFieldException;
             return;
         }
