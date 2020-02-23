@@ -100,7 +100,6 @@ public class ValidateEvaluatorTest {
             co.setConflictProp("this prop conflict with prop");
             assert new ValidateEvaluator<>(co).validate();
         } catch (Exception e) {
-            System.err.println(e.getMessage());
             assert e instanceof ConflictFieldException;
             return;
         }
@@ -118,7 +117,6 @@ public class ValidateEvaluatorTest {
             cro.setProp1("require prop");
             assert new ValidateEvaluator<>(cro).validate();
         } catch (Exception e){
-            System.err.println(e.getMessage());
             assert e instanceof CyclicRequirementException;
             return;
         }
@@ -134,42 +132,33 @@ public class ValidateEvaluatorTest {
         ValidateEvaluator<CascadeRequirementsObject> evaluator = new ValidateEvaluator<>(cro);
         cro.setProp("this is a mandatory property");
 
-        System.out.println("first validation");
-
         try {
             assert evaluator.validate();
         } catch (Exception e) {
-            System.out.println(e.getMessage());
             assert e instanceof RequirementsException;
         }
 
         cro.setReq1("this is a field required from prop");
 
-        System.out.println("second validation");
         try {
             assert evaluator.validate();
         } catch (Exception e) {
-            System.out.println(e.getMessage());
             assert e instanceof RequirementsException;
         }
 
         cro.setReq2("this is a field required from req1");
 
-        System.out.println("third validation");
         try {
             assert evaluator.validate();
         } catch (Exception e) {
-            System.out.println(e.getMessage());
             assert e instanceof RequirementsException;
         }
 
         cro.setReq3("this is a field required from req2");
 
-        System.out.println("fourth validation");
         try {
            assert evaluator.validate();
         } catch (Exception e) {
-            System.out.println(e.getMessage());
             assert e instanceof RequirementsException;
         }
     }
@@ -196,7 +185,7 @@ public class ValidateEvaluatorTest {
         CollectionObject co = new CollectionObject();
         List<SimpleObject> l = new ArrayList<>();
         SimpleObject so = new SimpleObject();
-//        so.setProp("ciao");
+        so.setProp("ciao");
         l.add(so);
         co.setMyPrivateList(l);
         ValidateEvaluator<CollectionObject> ve = new ValidateEvaluator<>(co);

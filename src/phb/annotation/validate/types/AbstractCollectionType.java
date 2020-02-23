@@ -2,10 +2,9 @@ package phb.annotation.validate.types;
 import phb.annotation.validate.ValidateEvaluator;
 import phb.annotation.validate.exception.InvalidCollectionFieldException;
 import phb.annotation.validate.exception.InvalidFieldException;
-import phb.annotation.validate.exception.InvalidNestedFieldException;
+import phb.utils.FunctionalUtils;
 
 import java.util.Collection;
-import java.util.function.Function;
 
 public class AbstractCollectionType<T, C extends Collection<T>> extends AbstractValidateType<C> {
 
@@ -22,26 +21,11 @@ public class AbstractCollectionType<T, C extends Collection<T>> extends Abstract
 
         if(guard.size() == 0)
             throw new InvalidCollectionFieldException(" is empty.");
+
         return guard.stream()
-                .map(tryCatch(item -> new ValidateEvaluator<>(item).validate()))
+                .map(FunctionalUtils.tryCatch(item -> new ValidateEvaluator<>(item).validate()))
                 .reduce((a, b) -> a && b)
                 .orElse(false);
     }
 
-    @FunctionalInterface
-    protected interface ThrowingFunction<I, R, E extends Exception> {
-        R accept(I s) throws E;
-    }
-
-    protected <I,R> Function<I, R> tryCatch(ThrowingFunction<I, R, Exception> throwingFunction) throws InvalidFieldException {
-        return i -> {
-            try {
-                return throwingFunction.accept(i);
-            } catch (InvalidFieldException | InvalidNestedFieldException e) {
-                throw new InvalidCollectionFieldException(e.getMessage());
-            }catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        };
-    }
 }

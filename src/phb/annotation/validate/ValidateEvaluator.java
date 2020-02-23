@@ -15,7 +15,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
     private Set<Validate.Ignore> ignoreList;
     private Map<String, ValidationState> av;
 
-    private enum ValidationState {VALID, NOT_SET, ON_EVALUATION, NOT_YET_EVALUATED};
+    private enum ValidationState {VALID, NOT_SET, ON_EVALUATION, NOT_YET_EVALUATED}
 
     public ValidateEvaluator(Target t) {
         super(t);
@@ -31,6 +31,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
 
     @Override
     public Boolean validate(){
+        av.forEach((key, value) -> av.put(key, ValidationState.NOT_YET_EVALUATED)); // reset keys in case of reuse, prevent fail on cascade requirements
         return super.validate();
     }
 
@@ -94,7 +95,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
             } catch (RequirementsException e) {
                 throw new RequirementsException(e.getMessage());
             } catch (CyclicRequirementException e) {
-                throw new CyclicRequirementException(e.getMessage());
+                throw new CyclicRequirementException(e.getMessage().contains(i.getName()) ? e.getMessage() : i.getName() + " : " + e.getMessage());
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -148,8 +149,8 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
      * @throws InvalidFieldException if no non-null alternatives are found or alternatives are ignored
      */
     private boolean validateAlternatives(Method method) throws InvalidFieldException{
-        Validate ann = method.getAnnotation(annotationClass);
         av.put(method.getName(), ValidationState.NOT_SET);
+        Validate ann = method.getAnnotation(annotationClass);
 
         if(isIgnorable(Validate.Ignore.MANDATORY) || !ann.mandatory())
             return true;
@@ -215,7 +216,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
      * {@link #evaluateMethod(Validate, Method)} wrapper but use a fallback annotation if not annotated
      */
     private Boolean validateChildMethod(Validate v, Method method) throws Exception {
-        return av.containsKey(method.getName()) || evaluateMethod(Optional.ofNullable(method.getAnnotation(annotationClass)).orElse(v), method);
+        return isAssessable(method.getName()) || evaluateMethod(Optional.ofNullable(method.getAnnotation(annotationClass)).orElse(v), method);
     }
 
     private <E extends RuntimeException>boolean validateChildAlternatives(Method method, E exception) throws InvalidFieldException{
@@ -249,7 +250,9 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
      * Shorthand for {@link #checkRequirements(Method)}, in most case, required or conflictual object are not annotated
      * this means that they have no specific requirements or have same as parent
      */
-    private Boolean checkChildRequirements(Method method) throws RequirementsException {
+    private Boolean checkChildRequirements(Method method) throws RequirementsException, CyclicRequirementException {
+        if(av.containsKey(method.getName()) && av.get(method.getName()).equals(ValidationState.ON_EVALUATION))
+            throw new CyclicRequirementException("Detected cyclic dependency with " + method.getName());
         return method.getAnnotation(annotationClass) == null || checkRequirements(method);
     }
 
@@ -257,6 +260,13 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         return ignoreList.contains(ignorable);
     }
 
+
+    /**
+     * @return true if the property hasn't been already evaluated or it is valid
+     */
+    private boolean isAssessable(String propertyName) {
+        return av.containsKey(propertyName) && ! (av.get(propertyName).equals(ValidationState.NOT_SET) || av.get(propertyName).equals(ValidationState.ON_EVALUATION));
+    }
     private String displayName(String method){
         return Stream.of(method).map(name -> name.replaceAll("^(get|is|has)", "")).map(name -> name.substring(0, 1).toLowerCase().concat(name.substring(1))).collect(Collectors.joining());
     }

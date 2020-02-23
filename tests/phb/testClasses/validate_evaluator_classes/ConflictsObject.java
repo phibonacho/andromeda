@@ -21,7 +21,7 @@ public class ConflictsObject {
         return conflictProp;
     }
 
-    public void setConflictProp(String requiredProp) {
-        this.conflictProp = requiredProp;
+    public void setConflictProp(String conflictProp) {
+        this.conflictProp = conflictProp;
     }
 }
