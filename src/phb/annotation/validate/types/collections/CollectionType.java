@@ -1,9 +1,7 @@
 package phb.annotation.validate.types.collections;
-import phb.annotation.validate.ValidateEvaluator;
 import phb.annotation.validate.exception.InvalidCollectionFieldException;
 import phb.annotation.validate.exception.InvalidFieldException;
 import phb.annotation.validate.types.AbstractValidateType;
-import phb.utils.FunctionalUtils;
 
 import java.util.Collection;
 
