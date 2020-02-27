@@ -1,7 +1,7 @@
 package it.phibonachos.evaluators;
 
 import it.phibonachos.andromeda.exception.InvalidFieldException;
-import it.phibonachos.utils.FunctionalUtils;
+import it.phibonachos.utils.FunctionalWrapper;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -44,12 +44,12 @@ public abstract class AbstractEvaluator<Target, Control, A extends Annotation> {
      * @return the result of the evaluation of throwing function or fallback
      * @throws InvalidFieldException if evaluation non-null but invalid
      */
-    protected abstract  <R> Function<Method, R> invokeOnNull(FunctionalUtils.ThrowingFunction<Method, R, Exception> throwingFunction, Function<Method, R> fallback) throws InvalidFieldException;
+    protected abstract  <R> Function<Method, R> invokeOnNull(FunctionalWrapper<Method, R, Exception> throwingFunction, Function<Method, R> fallback) throws InvalidFieldException;
 
     /**
-     * Same as {@link #invokeOnNull(FunctionalUtils.ThrowingFunction, Function)} but takes a supplier instead of a function (no params needed)
+     * Same as {@link #invokeOnNull(FunctionalWrapper, Function)} but takes a supplier instead of a function (no params needed)
      * */
-    protected abstract  <R>Function<Method, R> invokeOnNull(FunctionalUtils.ThrowingFunction<Method, R, Exception> throwingFunction, Supplier<R> fallback) throws InvalidFieldException;
+    protected abstract  <R>Function<Method, R> invokeOnNull(FunctionalWrapper<Method, R, Exception> throwingFunction, Supplier<R> fallback) throws InvalidFieldException;
 
 
     /**
@@ -58,7 +58,7 @@ public abstract class AbstractEvaluator<Target, Control, A extends Annotation> {
      * @throws RuntimeException if method is not found or other exceptions are catch
      */
     @Deprecated
-    protected Function<? super String, Method> fetchMethod(FunctionalUtils.ThrowingFunction<String, Method, NoSuchMethodException> throwingFunction) throws RuntimeException{
+    protected Function<? super String, Method> fetchMethod(FunctionalWrapper<String, Method, NoSuchMethodException> throwingFunction) throws RuntimeException{
         return i -> {
             try {
                 return throwingFunction.accept(i);
