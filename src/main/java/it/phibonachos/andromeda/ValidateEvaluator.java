@@ -1,7 +1,8 @@
 package it.phibonachos.andromeda;
 
 import it.phibonachos.andromeda.exception.*;
-import it.phibonachos.andromeda.types.ValidateTypeInterface;
+import it.phibonachos.andromeda.types.Constraint;
+import it.phibonachos.andromeda.types.SingleValueConstraint;
 import it.phibonachos.evaluators.AbstractEvaluator;
 import it.phibonachos.utils.FunctionalUtils;
 
@@ -57,19 +58,23 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
 
     @Override
     protected Function<Method, Boolean> sortPredicate() {
-        return a -> !a.getAnnotation(annotationClass).mandatory();
+        return a -> !a.getAnnotation(annotationClass).mandatory() && a.getAnnotation(annotationClass).boundTo().length == 0;
     }
 
     /**
      * Validate method with a generic validate interface
      * @param v a Validate annotation use for validate method result
-     * @param method a method to validate
+     * @param methods, method to validate
      * @return true if method return a valid value
      * @throws Exception if not valid
      */
-    @SuppressWarnings("unchecked") // giusto perché mi fa schifo vederlo tutto giallo...
-    protected Boolean evaluateMethod(Validate v, Method method) throws Exception {
-        return ValidateTypeInterface.create(v.with()).validate(method.invoke(this.t));
+    // giusto perché mi fa schifo vederlo tutto giallo...
+    protected Boolean evaluateMethod(Validate v, Method ...methods) throws Exception {
+        Constraint<Boolean> validator = Constraint.create(v.with());
+
+        if(validator instanceof SingleValueConstraint)
+            return validator.evaluate(this.t, methods[0]);
+        return validator.evaluate(this.t, methods);
     }
 
     /**
@@ -79,35 +84,6 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
      * @return the result of the evaluation of throwing function or fallback
      * @throws InvalidFieldException if evaluation non-null but invalid
      */
-    @Override
-    protected  <R> Function<Method, R> invokeOnNull(FunctionalUtils.ThrowingFunction<Method, R, Exception> throwingFunction, Function<Method, R> fallback) throws InvalidFieldException {
-        return i -> {
-            try {
-                return throwingFunction.accept(i);
-            } catch (NullPointerException npe) {
-                return fallback.apply(i);
-            } catch (InvalidCollectionFieldException e) {
-                throw new InvalidFieldException("Collection " + displayName(i.getName()) + "[] : " + e.getMessage());
-            } catch (InvalidPropertiesFormatException | InvalidFieldException e) {
-                throw new InvalidFieldException(e.getMessage());
-            } catch (InvalidNestedFieldException e) {
-                throw new InvalidFieldException(displayName(i.getName()) + e.getMessage());
-            } catch (ConflictFieldException e) {
-                throw new ConflictFieldException(e.getMessage());
-            } catch (CyclicRequirementException e) {
-                throw new CyclicRequirementException(e.getMessage().contains(i.getName()) ? e.getMessage() : i.getName() + " : " + e.getMessage());
-            } catch (RequirementsException e) {
-                throw new RequirementsException(e.getMessage());
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        };
-    }
-
-    /**
-     * Same as {@link #invokeOnNull(FunctionalUtils.ThrowingFunction, Function)} but takes a supplier instead of a function (no params needed)
-     * */
-    @Override
     protected  <R>Function<Method, R> invokeOnNull(FunctionalUtils.ThrowingFunction<Method, R, Exception> throwingFunction, Supplier<R> fallback) throws InvalidFieldException {
         return i -> {
             try {
@@ -116,12 +92,10 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
                 return fallback.get();
             } catch (InvalidCollectionFieldException e) {
                 throw new InvalidFieldException("Collection " + displayName(i.getName()) + "[] : " + e.getMessage());
-            } catch (InvalidPropertiesFormatException | InvalidFieldException e) {
-                throw new InvalidFieldException(e.getMessage());
-            } catch (InvalidNestedFieldException e) {
+            } catch (InvalidPropertiesFormatException | InvalidFieldException | InvalidNestedFieldException e) {
                 throw new InvalidFieldException(displayName(i.getName()) + e.getMessage());
-            } catch (RequirementsException e) {
-                throw new RequirementsException(e.getMessage());
+            } catch (RequirementsException | NoAlternativeException e) {
+                throw new RequirementsException(displayName(i.getName()) + " requires " + e.getMessage());
             } catch (IllegalArgumentException e) {
                 throw new AnnotationException(e.getMessage() + ". Have you annotated your field correctly?");
             } catch (Exception e) {
@@ -129,6 +103,30 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
             }
         };
     }
+
+    protected <R>Function<Method, R> invokeOnNull(FunctionalUtils.ThrowingFunction<Method, R, Exception> throwingFunction, Function<Method, R> fallback) throws InvalidFieldException {
+        return i -> {
+            try {
+                return throwingFunction.accept(i);
+            } catch (NullPointerException npe) {
+                return fallback.apply(i);
+            } catch (InvalidCollectionFieldException e) {
+                throw new InvalidFieldException("Collection " + displayName(i.getName()) + "[] : " + e.getMessage());
+            } catch (InvalidPropertiesFormatException | InvalidFieldException | InvalidNestedFieldException e) {
+                throw new InvalidFieldException(displayName(i.getName()) + e.getMessage());
+            } catch (ConflictFieldException e) {
+                throw new ConflictFieldException(e.getMessage());
+            } catch (CyclicRequirementException e) {
+                throw new CyclicRequirementException(e.getMessage());
+            } catch (RequirementsException | NoAlternativeException e) {
+                throw new RequirementsException(displayName(i.getName()) + " requires " + e.getMessage());
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new RuntimeException(e);
+            }
+        };
+    }
+
 
     /* ----------------- PRIVATE METHODS ----------------- */
 
@@ -139,10 +137,19 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
     }
 
     /**
-     * Short hand for {@link #evaluateMethod(Validate, Method)} uses method own validate annotation
+     * Short hand for {@link #evaluateMethod(Validate, Method...)} uses method own validate annotation
      */
-    private Boolean validateMethod(Method m) throws Exception {
-        return av.containsKey(m.getName()) || evaluateMethod(m.getAnnotation(annotationClass), m);
+    private Boolean validateMethod(Method method) throws Exception {
+        List<Method> boundMethod = Arrays.stream(method.getAnnotation(annotationClass).boundTo())
+                .map(FunctionalUtils.tryCatch(name -> new PropertyDescriptor(name, this.t.getClass()).getReadMethod()))
+                .collect(Collectors.toList());
+
+        boundMethod.add(0, method);
+        if(check(method) == ValidationState.VALID)
+            return true;
+        if(check(method) == ValidationState.NOT_YET_EVALUATED)
+            av.put(method.getName(), ValidationState.ON_EVALUATION);
+        return !evaluateMethod(method.getAnnotation(annotationClass), boundMethod.toArray(new Method[0])) || (checkRequirements(method)  && checkConflicts(method));
     }
 
     /**
@@ -167,7 +174,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
                         m -> false))
                 // lazy find first valid
                 .filter(valid -> valid)
-                .findFirst().orElseThrow(() -> new InvalidFieldException(method, List.of(ann.alternatives())));
+                .findFirst().orElseThrow(() -> new NoAlternativeException(method, List.of(ann.alternatives())));
     }
 
     /**
@@ -215,7 +222,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
     }
 
     /**
-     * {@link #evaluateMethod(Validate, Method)} wrapper but use a fallback annotation if not annotated
+     * {@link #evaluateMethod(Validate, Method...)} wrapper but use a fallback annotation if not annotated
      */
     private Boolean validateChildMethod(Validate v, Method method) throws Exception {
         return isAssessable(method.getName()) || evaluateMethod(Optional.ofNullable(method.getAnnotation(annotationClass)).orElse(v), method);
@@ -237,7 +244,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
                         m -> false))
                 // lazy find first valid
                 .filter(valid -> valid)
-                .findFirst().orElseThrow(() -> exception);
+                .findFirst().orElseThrow(() -> new NoAlternativeException(method, List.of(ann.alternatives())));
     }
 
     /**

@@ -5,6 +5,7 @@ import it.phibonachos.andromeda.exception.InvalidFieldException;
 import it.phibonachos.andromeda.exception.InvalidNestedFieldException;
 
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class FunctionalUtils {
     @FunctionalInterface
@@ -23,4 +24,25 @@ public class FunctionalUtils {
             }
         };
     }
+
+    public static <I,R> Function<I, R> tryCatch(ThrowingFunction<I, R, Exception> throwingFunction, Function<I,R> fallback) throws InvalidFieldException {
+        return i -> {
+            try {
+                return throwingFunction.accept(i);
+            } catch (Exception e) {
+                return fallback.apply(i);
+            }
+        };
+    }
+
+    public static <I,R> Function<I, R> tryCatch(ThrowingFunction<I, R, Exception> throwingFunction, Supplier<R> fallback) throws InvalidFieldException {
+        return i -> {
+            try {
+                return throwingFunction.accept(i);
+            } catch (Exception e) {
+                return fallback.get();
+            }
+        };
+    }
+
 }

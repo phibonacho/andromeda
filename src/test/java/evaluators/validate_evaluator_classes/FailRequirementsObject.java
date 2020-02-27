@@ -1,7 +1,7 @@
 package evaluators.validate_evaluator_classes;
 
 import it.phibonachos.andromeda.Validate;
-import it.phibonachos.andromeda.types.DoubleValue;
+import it.phibonachos.andromeda.types.NumericConstraint;
 import it.phibonachos.andromeda.types.StringValue;
 
 public class FailRequirementsObject {
@@ -17,7 +17,7 @@ public class FailRequirementsObject {
         this.prop = prop;
     }
 
-    @Validate(with = DoubleValue.class)
+    @Validate(with = NumericConstraint.class)
     public Double getRequiredProp() {
         return requiredProp;
     }

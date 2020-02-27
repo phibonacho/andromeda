@@ -1,14 +1,14 @@
 package evaluators.validate_evaluator_classes;
 
 import it.phibonachos.andromeda.Validate;
-import it.phibonachos.andromeda.types.collections.CollectionType;
+import it.phibonachos.andromeda.types.collections.BlandCollectionType;
 
 import java.util.List;
 
 public class CollectionObject {
     private List<SimpleObject> myPrivateList;
 
-    @Validate(with = CollectionType.class, mandatory = true)
+    @Validate(with = BlandCollectionType.class, mandatory = true)
     public List<SimpleObject> getMyPrivateList() {
         return myPrivateList;
     }

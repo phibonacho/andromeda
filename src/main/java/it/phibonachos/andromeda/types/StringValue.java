@@ -2,12 +2,9 @@ package it.phibonachos.andromeda.types;
 
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.InvalidPropertiesFormatException;
-
-public class StringValue extends AbstractStringType {
+public class StringValue extends SingleValueConstraint<String> {
     @Override
-    public Boolean check(String guard) throws InvalidPropertiesFormatException {
-        if(StringUtils.isBlank(guard)) throw new InvalidPropertiesFormatException("blank string passed");
-        return true;
+    public Boolean validate(String guard) {
+        return !StringUtils.isBlank(guard);
     }
 }

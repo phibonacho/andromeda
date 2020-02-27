@@ -1,14 +1,11 @@
 package evaluators;
 
 
+import it.phibonachos.andromeda.exception.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import it.phibonachos.andromeda.ValidateEvaluator;
-import it.phibonachos.andromeda.exception.ConflictFieldException;
-import it.phibonachos.andromeda.exception.CyclicRequirementException;
-import it.phibonachos.andromeda.exception.InvalidFieldException;
-import it.phibonachos.andromeda.exception.RequirementsException;
 import evaluators.validate_evaluator_classes.*;
 
 import java.util.ArrayList;
@@ -25,6 +22,19 @@ public class ValidateEvaluatorTest {
         so.setProp("this is a valid string as it is not blank");
 
         assert new ValidateEvaluator<>(so).validate();
+    }
+
+    @Test
+    public void plainFailValidation() throws Exception {
+        SimpleObject so = new SimpleObject();
+        try {
+            assert new ValidateEvaluator<>(so).validate();
+        } catch(Exception e) {
+            assert true;
+            return;
+        }
+
+        assert false;
     }
 
     @Test
@@ -73,7 +83,7 @@ public class ValidateEvaluatorTest {
             AlternativeObject ao = new AlternativeObject();
             assert new ValidateEvaluator<>(ao).validate();
         } catch (Exception e) {
-            assert e instanceof InvalidFieldException;
+            assert e instanceof NoAlternativeException;
             return;
         }
         assert false;
@@ -174,7 +184,7 @@ public class ValidateEvaluatorTest {
 
             assert new ValidateEvaluator<>(cao).validate();
         } catch (Exception e){
-            assert e instanceof InvalidFieldException;
+            assert e instanceof NoAlternativeException;
             return;
         }
         assert false;
@@ -186,6 +196,50 @@ public class ValidateEvaluatorTest {
         List<SimpleObject> l = new ArrayList<>();
         co.setMyPrivateList(l);
         ValidateEvaluator<CollectionObject> ve = new ValidateEvaluator<>(co);
+        assert ve.validate();
+    }
+
+    @Test
+    public void successfulCompoundConstraint() {
+        CompoundConstraintObject cco = new CompoundConstraintObject();
+        ValidateEvaluator<CompoundConstraintObject> ve = new ValidateEvaluator<>(cco);
+        cco.setProp("this is mandatory");
+        cco.setProp1(true);
+        cco.setProp2("this is required since prop1 is true");
+
+        assert ve.validate();
+
+        try {
+            cco.setProp1(false);
+            ve.validate();
+        } catch (Exception ife) {
+            assert ife instanceof InvalidFieldException;
+            assert ife.getMessage().contains("incompatible values");
+        }
+
+        cco.setProp2(null);
+
+        assert ve.validate();
+    }
+
+    @Test
+    public void nestedValidation() {
+        NestedObject no = new NestedObject();
+        ValidateEvaluator<NestedObject> ve = new ValidateEvaluator<>(no);
+        no.setProp("this is mandatory");
+
+        assert ve.validate();
+
+        SimpleObject so = new SimpleObject();
+        no.setSo(so);
+        try {
+            ve.validate();
+        } catch (Exception e) {
+            assert e instanceof InvalidFieldException;
+        }
+
+        so.setProp("is mandatory also here");
+
         assert ve.validate();
     }
 
