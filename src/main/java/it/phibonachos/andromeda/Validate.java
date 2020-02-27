@@ -1,6 +1,6 @@
 package it.phibonachos.andromeda;
 
-import it.phibonachos.andromeda.types.AbstractValidateType;
+import it.phibonachos.andromeda.types.MultiValueConstraint;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -16,7 +16,7 @@ public @interface Validate {
     /**
      * @return a validator object
      */
-    Class<? extends AbstractValidateType> with();
+    Class<? extends MultiValueConstraint> with();
 
     /**
      * @return true if validate field is mandatory
@@ -31,5 +31,7 @@ public @interface Validate {
     String[] conflicts() default {};
 
     String[] require() default {};
+
+    String[] boundTo() default {};
 
 }

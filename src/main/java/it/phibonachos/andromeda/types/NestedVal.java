@@ -4,14 +4,10 @@ import it.phibonachos.andromeda.ValidateEvaluator;
 import it.phibonachos.andromeda.exception.InvalidFieldException;
 import it.phibonachos.andromeda.exception.InvalidNestedFieldException;
 
-public class NestedVal<T> extends AbstractValidateType<T> {
-    @Override
-    public Boolean isInstance(Object obj) {
-        return true;
-    }
+public class NestedVal<T> extends SingleValueConstraint<T> {
 
     @Override
-    public Boolean check(T guard) throws InvalidFieldException, InvalidNestedFieldException {
+    public Boolean validate(T guard) throws InvalidFieldException, InvalidNestedFieldException {
         try {
             return new ValidateEvaluator<>(guard).validate();
         } catch (Exception e) {
