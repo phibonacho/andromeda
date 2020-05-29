@@ -68,7 +68,6 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
      * @return true if method return a valid value
      * @throws Exception if not valid
      */
-    // giusto perché mi fa schifo vederlo tutto giallo...
     protected Boolean evaluateMethod(Validate v, Method ...methods) throws Exception {
         Constraint<Boolean> validator = Constraint.create(v.with());
 
@@ -167,14 +166,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         if(isIgnorable(Validate.Ignore.ALTERNATIVES) || ann.alternatives().length == 0)
             throw new InvalidFieldException(method);
 
-        return Arrays.stream(ann.alternatives())
-                .map(FunctionalWrapper.tryCatch(mName ->  new PropertyDescriptor(mName, this.t.getClass()).getReadMethod()))
-                .map(invokeOnNull(
-                        m -> !validateChildMethod(ann, m) || (checkChildRequirements(m) && checkChildConflicts(m)),
-                        m -> false))
-                // lazy find first valid
-                .filter(valid -> valid)
-                .findFirst().orElseThrow(() -> new NoAlternativeException(method, List.of(ann.alternatives())));
+        return validateAlternatives(method, ann);
     }
 
     /**
@@ -237,14 +229,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         if(isIgnorable(Validate.Ignore.ALTERNATIVES))
             throw new InvalidFieldException(method);
 
-        return Arrays.stream(ann.alternatives())
-                .map(FunctionalWrapper.tryCatch(mName ->  new PropertyDescriptor(mName, this.t.getClass()).getReadMethod()))
-                .map(invokeOnNull(
-                        m -> !validateChildMethod(ann, m) || (checkChildRequirements(m) && checkChildConflicts(m)),
-                        m -> false))
-                // lazy find first valid
-                .filter(valid -> valid)
-                .findFirst().orElseThrow(() -> new NoAlternativeException(method, List.of(ann.alternatives())));
+        return validateAlternatives(method, ann);
     }
 
     /**
@@ -276,7 +261,20 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
     private boolean isAssessable(String propertyName) {
         return av.containsKey(propertyName) && ! (av.get(propertyName).equals(ValidationState.NOT_SET) || av.get(propertyName).equals(ValidationState.ON_EVALUATION));
     }
+
     private String displayName(String method){
         return Stream.of(method).map(name -> name.replaceAll("^(get|is|has)", "")).map(name -> name.substring(0, 1).toLowerCase().concat(name.substring(1))).collect(Collectors.joining());
     }
+
+    private boolean validateAlternatives(Method method, Validate ann) {
+        return Arrays.stream(ann.alternatives())
+                .map(FunctionalWrapper.tryCatch(mName ->  new PropertyDescriptor(mName, this.t.getClass()).getReadMethod()))
+                .map(invokeOnNull(
+                        m -> !validateChildMethod(ann, m) || (checkChildRequirements(m) && checkChildConflicts(m)),
+                        m -> false))
+                // lazy find first valid
+                .filter(valid -> valid)
+                .findFirst().orElseThrow(() -> new NoAlternativeException(method, List.of(ann.alternatives())));
+    }
+
 }

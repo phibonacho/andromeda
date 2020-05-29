@@ -8,3 +8,4 @@ public class StringValue extends SingleValueConstraint<String> {
         return !StringUtils.isBlank(guard);
     }
 }
+

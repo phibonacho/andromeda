@@ -241,6 +241,20 @@ public class ValidateEvaluatorTest {
         }
     }
 
+    @Test
+    public void nonMandatoryWithRequirementFails() {
+        NonMandatoryWithRequirements nmwr = new NonMandatoryWithRequirements();
+        nmwr.setProp("ciao");
+        ValidateEvaluator<NonMandatoryWithRequirements> evaluator = new ValidateEvaluator<>(nmwr);
+
+        try {
+            assert evaluator.validate();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            assert e instanceof RequirementsException;
+        }
+    }
+
     /**
      * Child method alternatives are discarded
      */
@@ -278,6 +292,13 @@ public class ValidateEvaluatorTest {
         } catch (Exception e) {
             assert e instanceof InvalidFieldException;
         }
+    }
+
+    @Test
+    public void StringValueConstraintAccpet() {
+        SimpleObject so = new SimpleObject();
+        so.setProp("");
+        new ValidateEvaluator<>(so).validate();
     }
 
 }

@@ -16,6 +16,7 @@ public abstract class MultiValueConstraint implements Constraint<Boolean> {
         Supplier<Stream<Object>> sup = () -> Arrays.stream(props).map(FunctionalWrapper.tryCatch(m -> m.invoke(target), m -> null));
         if(sup.get().anyMatch(Objects::isNull))
             throw new NullPointerException();
+
         if(!validateAll(sup.get().toArray()))
             throw new InvalidFieldException(" " + message());
         return true;
