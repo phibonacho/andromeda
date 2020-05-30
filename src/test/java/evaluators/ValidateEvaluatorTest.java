@@ -295,10 +295,14 @@ public class ValidateEvaluatorTest {
     }
 
     @Test
-    public void StringValueConstraintAccpet() {
+    public void StringValueConstraintFails() {
         SimpleObject so = new SimpleObject();
         so.setProp("");
-        new ValidateEvaluator<>(so).validate();
+        try {
+            new ValidateEvaluator<>(so).validate();
+        } catch (Exception e) {
+            assert e instanceof InvalidFieldException;
+        }
     }
 
 }
