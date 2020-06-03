@@ -23,6 +23,7 @@ public abstract class AbstractEvaluator<Target, Control, A extends Annotation> {
         return Arrays.stream(this.t.getClass().getDeclaredMethods())
                 .filter(m -> m.getAnnotation(annotationClass)!=null)
                 .filter(m -> m.getParameterCount() == 0)
+                .filter(this::customFilter)
                 .sorted(Comparator.comparing(sortPredicate())) // mandatory fields as first
                 .map(validateAlgorithm());
     }
@@ -36,6 +37,10 @@ public abstract class AbstractEvaluator<Target, Control, A extends Annotation> {
     protected abstract Function<Method, Boolean> sortPredicate();
 
     protected abstract Function<Method, Control> validateAlgorithm();
+
+    protected Boolean customFilter(Method m) {
+        return true;
+    }
 
     /**
      * @param throwingFunction a function capable of throwing exceptions
@@ -68,5 +73,9 @@ public abstract class AbstractEvaluator<Target, Control, A extends Annotation> {
                 throw new RuntimeException(e.getMessage());
             }
         };
+    }
+
+    protected A getMainAnnotation(Method m) {
+        return m.getAnnotation(annotationClass);
     }
 }

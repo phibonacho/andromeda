@@ -16,6 +16,7 @@ import java.util.stream.Stream;
 
 public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean, Validate> {
     private Set<Validate.Ignore> ignoreList;
+    private Set<String> contexts, ignoreContexts;
     private Map<String, ValidationState> av;
 
     private enum ValidationState {VALID, NOT_SET, ON_EVALUATION, NOT_YET_EVALUATED}
@@ -24,13 +25,26 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         super(t);
         this.annotationClass = Validate.class;
         ignoreList = new HashSet<>();
+        contexts = new HashSet<>();
+        ignoreContexts = new HashSet<>();
         av = new HashMap<>();
     }
 
-    public ValidateEvaluator<Target> ignoring(Validate.Ignore ...ignorable){
+    public ValidateEvaluator<Target> ignoreClauses(Validate.Ignore ...ignorable){
         this.ignoreList = Set.of(ignorable);
         return this;
     }
+
+    public ValidateEvaluator<Target> ignoreContexts(String ...ignorable){
+        this.ignoreContexts = Set.of(ignorable);
+        return this;
+    }
+
+    public ValidateEvaluator<Target> onlyContexts(String ...contexts){
+        this.contexts = Set.of(contexts);
+        return this;
+    }
+
 
     @Override
     public Boolean validate(){
@@ -58,7 +72,19 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
 
     @Override
     protected Function<Method, Boolean> sortPredicate() {
-        return a -> !a.getAnnotation(annotationClass).mandatory() && a.getAnnotation(annotationClass).boundTo().length == 0;
+        return m -> !getMainAnnotation(m).mandatory() && getMainAnnotation(m).boundTo().length == 0;
+    }
+
+    /**
+     * @param m the method to be filtered
+     * @return true if the method is associated in a context registered in the validator.
+     */
+    @Override
+    protected Boolean customFilter(Method m) {
+        if(contexts.isEmpty())
+            return true;
+
+        return Arrays.stream(getMainAnnotation(m).context()).anyMatch(ctx -> contexts.contains(ctx));
     }
 
     /**
@@ -139,7 +165,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
      * Short hand for {@link #evaluateMethod(Validate, Method...)} uses method own validate annotation
      */
     private Boolean validateMethod(Method method) throws Exception {
-        List<Method> boundMethod = Arrays.stream(method.getAnnotation(annotationClass).boundTo())
+        List<Method> boundMethod = Arrays.stream(getMainAnnotation(method).boundTo())
                 .map(FunctionalWrapper.tryCatch(name -> new PropertyDescriptor(name, this.t.getClass()).getReadMethod()))
                 .collect(Collectors.toList());
 
@@ -148,7 +174,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
             return true;
         if(check(method) == ValidationState.NOT_YET_EVALUATED)
             av.put(method.getName(), ValidationState.ON_EVALUATION);
-        return !evaluateMethod(method.getAnnotation(annotationClass), boundMethod.toArray(new Method[0])) || (checkRequirements(method)  && checkConflicts(method));
+        return !evaluateMethod(getMainAnnotation(method), boundMethod.toArray(new Method[0])) || (checkRequirements(method)  && checkConflicts(method));
     }
 
     /**
@@ -158,9 +184,9 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
      */
     private boolean validateAlternatives(Method method) throws InvalidFieldException{
         av.put(method.getName(), ValidationState.NOT_SET);
-        Validate ann = method.getAnnotation(annotationClass);
+        Validate ann = getMainAnnotation(method);
 
-        if(isIgnorable(Validate.Ignore.MANDATORY) || !ann.mandatory())
+        if(isIgnorable(Validate.Ignore.MANDATORY) || !ann.mandatory() || Arrays.stream(ann.context()).anyMatch(ctx -> ignoreContexts.contains(ctx)))
             return true;
 
         if(isIgnorable(Validate.Ignore.ALTERNATIVES) || ann.alternatives().length == 0)
@@ -176,7 +202,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
      * @throws ConflictFieldException if conflicts are found
      */
     private Boolean checkConflicts(Method m) throws ConflictFieldException {
-        Validate ann = m.getAnnotation(annotationClass);
+        Validate ann = getMainAnnotation(m);
         if(!isIgnorable(Validate.Ignore.CONFLICTS)
                 && List.of(ann.conflicts())
                 .stream()
@@ -198,33 +224,33 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         if(isIgnorable(Validate.Ignore.REQUIREMENTS)) // if method already validated return true
             return true;
 
-        Validate ann = method.getAnnotation(annotationClass);
+        Validate ann = getMainAnnotation(method);
         av.put(method.getName(), ValidationState.ON_EVALUATION);
 
         // check requirements for field
-        if(List.of(ann.require())
+        if(List.of(ann.requires())
                 .stream()
                 // create a stream of require methods (not null)
                 .map(FunctionalWrapper.tryCatch(mName ->  new PropertyDescriptor(mName, this.t.getClass()).getReadMethod()))
                 // try to validate methods with their own annotation
-                .map(invokeOnNull(m -> !validateChildMethod(ann, m) || checkChildRequirements(m) && checkChildConflicts(m), m -> validateChildAlternatives(m, new RequirementsException(method, List.of(ann.require())))))
+                .map(invokeOnNull(m -> !validateChildMethod(ann, m) || checkChildRequirements(m) && checkChildConflicts(m), m -> validateChildAlternatives(m, new RequirementsException(method, List.of(ann.requires())))))
                 .filter(valid -> !valid)
                 .findFirst().orElse(true)) return true;
-        throw new RequirementsException(method, List.of(ann.require()));
+        throw new RequirementsException(method, List.of(ann.requires()));
     }
 
     /**
      * {@link #evaluateMethod(Validate, Method...)} wrapper but use a fallback annotation if not annotated
      */
     private Boolean validateChildMethod(Validate v, Method method) throws Exception {
-        return isAssessable(method.getName()) || evaluateMethod(Optional.ofNullable(method.getAnnotation(annotationClass)).orElse(v), method);
+        return isAssessable(method.getName()) || evaluateMethod(Optional.ofNullable(getMainAnnotation(method)).orElse(v), method);
     }
 
     private <E extends RuntimeException>boolean validateChildAlternatives(Method method, E exception) throws InvalidFieldException{
         if(check(method) == ValidationState.VALID) // if method already validated return true
             return true;
 
-        Validate ann = method.getAnnotation(annotationClass);
+        Validate ann = getMainAnnotation(method);
 
         if(isIgnorable(Validate.Ignore.ALTERNATIVES))
             throw new InvalidFieldException(method);
@@ -237,7 +263,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
      * this means that they have no specific conflicts or have same as parent
      */
     private Boolean checkChildConflicts(Method method) throws RequirementsException {
-        return method.getAnnotation(annotationClass)==null || checkConflicts(method);
+        return getMainAnnotation(method) == null || checkConflicts(method);
     }
 
     /**
@@ -247,13 +273,12 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
     private Boolean checkChildRequirements(Method method) throws RequirementsException {
         if(av.containsKey(method.getName()) && av.get(method.getName()).equals(ValidationState.ON_EVALUATION))
             throw new CyclicRequirementException("Detected cyclic dependency with " + method.getName());
-        return method.getAnnotation(annotationClass) == null || checkRequirements(method);
+        return getMainAnnotation(method) == null || checkRequirements(method);
     }
 
     private boolean isIgnorable(Validate.Ignore ignorable){
         return ignoreList.contains(ignorable);
     }
-
 
     /**
      * @return true if the property hasn't been already evaluated or it is valid

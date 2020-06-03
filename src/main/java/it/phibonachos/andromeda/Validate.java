@@ -30,8 +30,10 @@ public @interface Validate {
 
     String[] conflicts() default {};
 
-    String[] require() default {};
+    String[] requires() default {};
 
     String[] boundTo() default {};
+
+    String[] context() default {};
 
 }

@@ -7,7 +7,7 @@ public class NonMandatoryWithRequirements {
     private String prop;
     private String requireProp;
 
-    @Validate(with = StringValue.class, require = "requireProp")
+    @Validate(with = StringValue.class, requires = "requireProp")
     public String getProp() {
         return prop;
     }
