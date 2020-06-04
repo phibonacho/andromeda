@@ -1,6 +1,9 @@
 package it.phibonachos.andromeda.types;
 
+import java.util.Set;
+
 public abstract class RegexClass extends StringValue {
+
     public abstract String regex();
 
     @Override

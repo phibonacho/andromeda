@@ -45,7 +45,6 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         return this;
     }
 
-
     @Override
     public Boolean validate(){
         av.forEach((key, value) -> av.put(key, ValidationState.NOT_YET_EVALUATED)); // reset keys in case of reuse, prevent fail on cascade requirements
@@ -97,8 +96,12 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
     protected Boolean evaluateMethod(Validate v, Method ...methods) throws Exception {
         Constraint<Boolean> validator = Constraint.create(v.with());
 
+        validator.setContext(contexts);
+        validator.setIgnoreContext(ignoreContexts);
+
         if(validator instanceof SingleValueConstraint)
             return validator.evaluate(this.t, methods[0]);
+
         return validator.evaluate(this.t, methods);
     }
 

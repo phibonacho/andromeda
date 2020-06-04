@@ -9,7 +9,10 @@ public class NestedVal<T> extends SingleValueConstraint<T> {
     @Override
     public Boolean validate(T guard) throws InvalidFieldException, InvalidNestedFieldException {
         try {
-            return new ValidateEvaluator<>(guard).validate();
+            return new ValidateEvaluator<>(guard)
+                    .onlyContexts(this.context)
+                    .ignoreContexts(this.ignoreContext)
+                    .validate();
         } catch (Exception e) {
             if(e instanceof InvalidFieldException)
                 throw new InvalidNestedFieldException("." + e.getMessage());
