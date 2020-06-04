@@ -7,7 +7,7 @@ public class AlternativeObject {
     private String prop;
     private String alternativeProp;
 
-    @Validate(with = StringValue.class, mandatory = true, alternatives = "alternativeProp")
+    @Validate(with = StringValue.class, mandatory = true, alternatives = "alternativeProp", context = "ctx1")
     public String getProp() {
         return prop;
     }

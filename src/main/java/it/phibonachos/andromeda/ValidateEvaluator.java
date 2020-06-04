@@ -15,19 +15,19 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean, Validate> {
+    final private Map<String, ValidationState> av;
     private Set<Validate.Ignore> ignoreList;
     private Set<String> contexts, ignoreContexts;
-    private Map<String, ValidationState> av;
 
     private enum ValidationState {VALID, NOT_SET, ON_EVALUATION, NOT_YET_EVALUATED}
 
     public ValidateEvaluator(Target t) {
         super(t);
         this.annotationClass = Validate.class;
+        av = new HashMap<>();
         ignoreList = new HashSet<>();
         contexts = new HashSet<>();
         ignoreContexts = new HashSet<>();
-        av = new HashMap<>();
     }
 
     public ValidateEvaluator<Target> ignoreClauses(Validate.Ignore ...ignorable){
@@ -75,17 +75,17 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         return m -> !getMainAnnotation(m).mandatory() && getMainAnnotation(m).boundTo().length == 0;
     }
 
-    /**
+/*    *//**
      * @param m the method to be filtered
      * @return true if the method is associated in a context registered in the validator.
-     */
+     *//*
     @Override
     protected Boolean customFilter(Method m) {
         if(contexts.isEmpty())
             return true;
 
         return Arrays.stream(getMainAnnotation(m).context()).anyMatch(ctx -> contexts.contains(ctx));
-    }
+    }*/
 
     /**
      * Validate method with a generic validate interface
@@ -152,13 +152,10 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         };
     }
 
-
     /* ----------------- PRIVATE METHODS ----------------- */
 
     private ValidationState check(Method method) throws InvalidFieldException{
-        String mName = method.getName();
-        return Optional.ofNullable(av.get(mName)).orElse(ValidationState.NOT_YET_EVALUATED);
-
+        return Optional.ofNullable(av.get(method.getName())).orElse(ValidationState.NOT_YET_EVALUATED);
     }
 
     /**
@@ -186,7 +183,10 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         av.put(method.getName(), ValidationState.NOT_SET);
         Validate ann = getMainAnnotation(method);
 
-        if(isIgnorable(Validate.Ignore.MANDATORY) || !ann.mandatory() || Arrays.stream(ann.context()).anyMatch(ctx -> ignoreContexts.contains(ctx)))
+        if(isIgnorable(Validate.Ignore.MANDATORY)
+                || !ann.mandatory()
+                || Arrays.stream(ann.context()).anyMatch(ctx -> ignoreContexts.contains(ctx))
+                || ( !contexts.isEmpty() && Arrays.stream(ann.context()).noneMatch(ctx -> contexts.contains(ctx))))
             return true;
 
         if(isIgnorable(Validate.Ignore.ALTERNATIVES) || ann.alternatives().length == 0)

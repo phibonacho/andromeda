@@ -9,7 +9,7 @@ public class CascadeRequirementsObject {
     private String req2;
     private String req3;
 
-    @Validate(with = StringValue.class, requires = "req1", mandatory = true)
+    @Validate(with = StringValue.class, requires = "req1", mandatory = true, context = "ctx1")
     public String getProp() {
         return prop;
     }
@@ -18,7 +18,7 @@ public class CascadeRequirementsObject {
         this.prop = prop;
     }
 
-    @Validate(with = StringValue.class, requires = "req2")
+    @Validate(with = StringValue.class, requires = "req2", mandatory = true, context = "ctx2")
     public String getReq1() {
         return req1;
     }
