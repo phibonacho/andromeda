@@ -67,7 +67,20 @@ public class RequiresClauseTest {
     @Test
     /* when a context is ignored it must maintain its clausole except mandatory one*/
     public void ignorableMaintainRequirements() {
+        CascadeRequirementsObject cro = new CascadeRequirementsObject();
+        ValidateEvaluator<CascadeRequirementsObject> evaluator = new ValidateEvaluator<>(cro)
+                .onlyContexts("ctx1") // this avoid ctx2 from being validated
+                .ignoreContexts("ctx1"); // this turns properties defined in ctx1 non mandatory
 
+        assert evaluator.validate(); // as no prop is set, validation completes successfully
+
+        cro.setProp("this is no longer a mandatory property");
+
+        try {
+            assert evaluator.validate();
+        } catch (Exception e) {
+            assert e instanceof RequirementsException; // even if no longer mandatory, a property set without matching requirements results in error
+        }
     }
 
     /* NEGATIVE TEST */
