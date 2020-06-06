@@ -44,11 +44,12 @@ public abstract class AbstractEvaluator<Target, Control, A extends Annotation> {
     }
 
     /**
-     * @param throwingFunction a function capable of throwing exceptions
-     * @param fallback a function to call in case of failure
-     * @param <R> a return type
-     * @return the result of the evaluation of throwing function or fallback
-     * @throws InvalidFieldException if evaluation non-null but invalid
+     * Invoke method against a class and uses fallback in case of nullpointer
+     * @param throwingFunction wraps method invocation
+     * @param fallback invoked when throwingFunction results in nullpointer
+     * @param <R> parametric return type
+     * @return result of the invocation in throwingFunction or value provided from fallback function
+     * @throws InvalidFieldException evaluation non-null but invalid
      */
     protected abstract  <R> Function<Method, R> invokeOnNull(FunctionalWrapper<Method, R, Exception> throwingFunction, Function<Method, R> fallback) throws InvalidFieldException;
 
@@ -59,7 +60,8 @@ public abstract class AbstractEvaluator<Target, Control, A extends Annotation> {
 
 
     /**
-     * @param throwingFunction a function which takes a string and return a method
+     * Return getter method starting from property name
+     * @param throwingFunction algorithm to retrieve a getMethod using its name
      * @return the method of the given class
      * @throws RuntimeException if method is not found or other exceptions are catch
      */
