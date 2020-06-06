@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","url":"allpackages-index.html"},{"l":"it.phibonachos.andromeda"},{"l":"it.phibonachos.andromeda.exception"},{"l":"it.phibonachos.andromeda.types"},{"l":"it.phibonachos.andromeda.types.collections"},{"l":"it.phibonachos.evaluators"},{"l":"it.phibonachos.utils"}]

@@ -28,12 +28,24 @@ public @interface Validate {
      */
     String[] alternatives() default {};
 
+    /**
+     * @return a set of conflictual fields to current method
+     */
     String[] conflicts() default {};
 
+    /**
+     * @return a set of requirements for current method
+     */
     String[] requires() default {};
 
+    /**
+     * @return a set of properties bounded to the validation of current method
+     */
     String[] boundTo() default {};
 
+    /**
+     * @return a set of contexts in which current property is included
+     */
     String[] context() default {};
 
 }
