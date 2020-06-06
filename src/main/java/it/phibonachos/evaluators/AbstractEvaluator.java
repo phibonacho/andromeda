@@ -28,24 +28,42 @@ public abstract class AbstractEvaluator<Target, Control, A extends Annotation> {
                 .map(validateAlgorithm());
     }
 
+    /**
+     * Expose {@link #evaluate(Stream)} preventing final user from manipulating directly validation stream
+     * @return the result of the evaluation operated over target properties
+     */
     public Control validate(){
         return evaluate(validateStream());
     }
 
+    /**
+     * @param s Stream of properties already converted to Control type
+     * @return the evaluation based on properties concatenation
+     */
     protected abstract Control evaluate(Stream<Control> s);
 
+    /**
+     * @return a function for sorting properties in validation stream
+     */
     protected abstract Function<Method, Boolean> sortPredicate();
 
+    /**
+     * @return Convsersion function from property type to Control type
+     */
     protected abstract Function<Method, Control> validateAlgorithm();
 
+    /**
+     * @param m A property getter to filter
+     * @return true if the property should be included in validation stream
+     */
     protected Boolean customFilter(Method m) {
         return true;
     }
 
     /**
-     * Invoke method against a class and uses fallback in case of nullpointer
+     * Invoke method against a class and uses fallback in case of null property
      * @param throwingFunction wraps method invocation
-     * @param fallback invoked when throwingFunction results in nullpointer
+     * @param fallback invoked when throwingFunction results null
      * @param <R> parametric return type
      * @return result of the invocation in throwingFunction or value provided from fallback function
      * @throws InvalidFieldException evaluation non-null but invalid
@@ -77,6 +95,10 @@ public abstract class AbstractEvaluator<Target, Control, A extends Annotation> {
         };
     }
 
+    /**
+     * @param m Method from which retrieve target annotation
+     * @return target annotation
+     */
     protected A getMainAnnotation(Method m) {
         return m.getAnnotation(annotationClass);
     }

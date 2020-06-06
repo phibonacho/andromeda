@@ -1,8 +1,7 @@
 package it.phibonachos.andromeda.types.collections;
-import it.phibonachos.andromeda.exception.InvalidCollectionFieldException;
+
 import it.phibonachos.andromeda.ValidateEvaluator;
 import it.phibonachos.andromeda.exception.InvalidFieldException;
-import it.phibonachos.utils.FunctionalUtils;
 import it.phibonachos.utils.FunctionalWrapper;
 
 import java.util.Collection;

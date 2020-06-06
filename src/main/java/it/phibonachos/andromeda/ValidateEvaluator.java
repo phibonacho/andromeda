@@ -30,16 +30,28 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         ignoreContexts = new HashSet<>();
     }
 
+    /**
+     * @param ignorable Clauses to ignore during validation
+     * @return a loosen validator
+     */
     public ValidateEvaluator<Target> ignoreClauses(Validate.Ignore ...ignorable){
         this.ignoreList = Set.of(ignorable);
         return this;
     }
 
+    /**
+     * @param ignorable Contexts to ignore during validation
+     * @return a validator who will ignore properties associated to contexts passed as arguments
+     */
     public ValidateEvaluator<Target> ignoreContexts(String ...ignorable){
         this.ignoreContexts = Set.of(ignorable);
         return this;
     }
 
+    /**
+     * @param contexts Contexts to which validation must be restricted
+     * @return a specialized validator for the contexts passed as arguments
+     */
     public ValidateEvaluator<Target> onlyContexts(String ...contexts){
         this.contexts = Set.of(contexts);
         return this;
@@ -73,18 +85,6 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
     protected Function<Method, Boolean> sortPredicate() {
         return m -> !getMainAnnotation(m).mandatory() && getMainAnnotation(m).boundTo().length == 0;
     }
-
-/*    *//**
-     * @param m the method to be filtered
-     * @return true if the method is associated in a context registered in the validator.
-     *//*
-    @Override
-    protected Boolean customFilter(Method m) {
-        if(contexts.isEmpty())
-            return true;
-
-        return Arrays.stream(getMainAnnotation(m).context()).anyMatch(ctx -> contexts.contains(ctx));
-    }*/
 
     /**
      * Validate method with a generic validate interface

@@ -4,7 +4,7 @@ public abstract class SingleValueConstraint<T> extends MultiValueConstraint {
 
     @Override
     @SuppressWarnings("unchecked")
-    public Boolean validateAll(Object... objects) throws Exception {
+    protected Boolean validateAll(Object... objects) throws Exception {
         return validate((T) objects[0]);
     }
 
