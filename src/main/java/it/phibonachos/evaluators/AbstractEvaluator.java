@@ -48,7 +48,7 @@ public abstract class AbstractEvaluator<Target, Control, A extends Annotation> {
     protected abstract Function<Method, Boolean> sortPredicate();
 
     /**
-     * @return Convsersion function from property type to Control type
+     * @return Conversion function from property type to Control type
      */
     protected abstract Function<Method, Control> validateAlgorithm();
 
