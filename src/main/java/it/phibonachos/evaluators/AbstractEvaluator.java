@@ -29,7 +29,7 @@ public abstract class AbstractEvaluator<Target, Control, A extends Annotation> {
     }
 
     /**
-     * Expose {@link #evaluate(Stream)} preventing final user from manipulating directly validation stream
+     * <p>Expose {@link #evaluate(Stream)} preventing final user from manipulating directly validation stream</p>
      * @return the result of the evaluation operated over target properties
      */
     public Control validate(){
@@ -61,7 +61,7 @@ public abstract class AbstractEvaluator<Target, Control, A extends Annotation> {
     }
 
     /**
-     * Invoke method against a class and uses fallback in case of null property
+     * <p>Invoke method against a class and uses fallback in case of null property</p>
      * @param throwingFunction wraps method invocation
      * @param fallback invoked when throwingFunction results null
      * @param <R> parametric return type
@@ -77,7 +77,7 @@ public abstract class AbstractEvaluator<Target, Control, A extends Annotation> {
 
 
     /**
-     * Return getter method starting from property name
+     * <p>Return getter method starting from property name</p>
      * @param throwingFunction algorithm to retrieve a getMethod using its name
      * @return the method of the given class
      * @throws RuntimeException if method is not found or other exceptions are catch

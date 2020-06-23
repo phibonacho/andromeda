@@ -87,7 +87,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
     }
 
     /**
-     * Validate method with a generic validate interface
+     * <p>Validate method with a generic validate interface<p/>
      * @param v a Validate annotation use for validate method result
      * @param methods, method to validate
      * @return true if method return a valid value
@@ -162,7 +162,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
     }
 
     /**
-     * Short hand for {@link #evaluateMethod(Validate, Method...)} uses method own validate annotation
+     * <p>Short hand for {@link #evaluateMethod(Validate, Method...)} uses method own validate annotation</p>
      */
     private Boolean validateMethod(Method method) throws Exception {
         List<Method> boundMethod = Arrays.stream(getMainAnnotation(method).boundTo())
@@ -199,7 +199,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
     }
 
     /**
-     * retrieve conflictual methods with one passed as argument
+     * <p>Retrieve conflictual methods with one passed as argument</p>
      * @param m method with possible conflicts
      * @return true if no conflicts found
      * @throws ConflictFieldException if conflicts are found
@@ -218,7 +218,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
     }
 
     /**
-     * Requirements must be met by parent mandatory annotations and child annotation of a mandatory parent
+     * <p>Requirements must be met by parent mandatory annotations and child annotation of a mandatory parent</p>
      * @param method with requirements to satisfy
      * @return true if all requirements are met
      * @throws RequirementsException if some requirements are not met
@@ -243,7 +243,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
     }
 
     /**
-     * {@link #evaluateMethod(Validate, Method...)} wrapper but use a fallback annotation if not annotated
+     * <p>{@link #evaluateMethod(Validate, Method...)} wrapper but use a fallback annotation if not annotated</p>
      */
     private Boolean validateChildMethod(Validate v, Method method) throws Exception {
         return isAssessable(method.getName()) || evaluateMethod(Optional.ofNullable(getMainAnnotation(method)).orElse(v), method);
@@ -262,7 +262,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
     }
 
     /**
-     * Shorthand for {@link #checkConflicts(Method)}, in most case, required or conflictual object are not annotated
+     * <p>Shorthand for {@link #checkConflicts(Method)}, in most case, required or conflictual object are not annotated</p>
      * this means that they have no specific conflicts or have same as parent
      */
     private Boolean checkChildConflicts(Method method) throws RequirementsException {
@@ -270,7 +270,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
     }
 
     /**
-     * Shorthand for {@link #checkRequirements(Method)}, in most case, required or conflictual object are not annotated
+     * <p>Shorthand for {@link #checkRequirements(Method)}, in most case, required or conflictual object are not annotated</p>
      * this means that they have no specific requirements or have same as parent
      */
     private Boolean checkChildRequirements(Method method) throws RequirementsException {
