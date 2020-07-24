@@ -7,14 +7,8 @@ import it.phibonachos.andromeda.exception.InvalidNestedFieldException;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-@Deprecated
 public class FunctionalUtils {
-    @FunctionalInterface
-    public interface ThrowingFunction<I, R, E extends Exception> {
-        R accept(I s) throws E;
-    }
-
-    public static <I,R> Function<I, R> tryCatch(ThrowingFunction<I, R, Exception> throwingFunction) throws InvalidFieldException {
+    public static <I,R> Function<I, R> tryCatch(FunctionalWrapper<I, R, Exception> throwingFunction) throws InvalidFieldException {
         return i -> {
             try {
                 return throwingFunction.accept(i);
@@ -26,7 +20,7 @@ public class FunctionalUtils {
         };
     }
 
-    public static <I,R> Function<I, R> tryCatch(ThrowingFunction<I, R, Exception> throwingFunction, Function<I,R> fallback) throws InvalidFieldException {
+    public static <I,R> Function<I, R> tryCatch(FunctionalWrapper<I, R, Exception> throwingFunction, Function<I,R> fallback) throws InvalidFieldException {
         return i -> {
             try {
                 return throwingFunction.accept(i);
@@ -36,7 +30,7 @@ public class FunctionalUtils {
         };
     }
 
-    public static <I,R> Function<I, R> tryCatch(ThrowingFunction<I, R, Exception> throwingFunction, Supplier<R> fallback) throws InvalidFieldException {
+    public static <I,R> Function<I, R> tryCatch(FunctionalWrapper<I, R, Exception> throwingFunction, Supplier<R> fallback) throws InvalidFieldException {
         return i -> {
             try {
                 return throwingFunction.accept(i);

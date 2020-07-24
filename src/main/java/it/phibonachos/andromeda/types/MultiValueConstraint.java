@@ -1,6 +1,7 @@
 package it.phibonachos.andromeda.types;
 
 import it.phibonachos.andromeda.exception.InvalidFieldException;
+import it.phibonachos.utils.FunctionalUtils;
 import it.phibonachos.utils.FunctionalWrapper;
 
 import java.lang.reflect.Method;
@@ -25,7 +26,7 @@ public abstract class MultiValueConstraint implements Constraint<Boolean> {
      * @throws Exception if at least one clause is not met or validate algorithm emit a negative verdict.
      */
     public <Target> Boolean evaluate(Target target, Method... props) throws Exception {
-        Supplier<Stream<Object>> sup = () -> Arrays.stream(props).map(FunctionalWrapper.tryCatch(m -> m.invoke(target), m -> null));
+        Supplier<Stream<Object>> sup = () -> Arrays.stream(props).map(FunctionalUtils.tryCatch(m -> m.invoke(target), m -> null));
         if(sup.get().anyMatch(Objects::isNull))
             throw new NullPointerException();
 
