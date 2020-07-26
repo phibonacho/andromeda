@@ -78,7 +78,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
     }
 
     @Override
-    protected Function<Method, Boolean> validateAlgorithm() {
+    protected Function<Method, Boolean> evaluateAlgorithm() {
         return invokeOnNull(m -> !validateMethod(m) || (checkRequirements(m)  && checkConflicts(m)), this::validateAlternatives);
     }
 
