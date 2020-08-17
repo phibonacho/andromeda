@@ -4,6 +4,7 @@ import it.phibonachos.andromeda.exception.*;
 import it.phibonachos.andromeda.types.Constraint;
 import it.phibonachos.andromeda.types.SingleValueConstraint;
 import it.phibonachos.ponos.AbstractEvaluator;
+import it.phibonachos.ponos.converters.Converter;
 import it.phibonachos.utils.FunctionalUtils;
 import it.phibonachos.utils.FunctionalWrapper;
 
@@ -95,7 +96,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
      * @throws Exception if not valid
      */
     protected Boolean evaluateMethod(Validate v, Method ...methods) throws Exception {
-        Constraint<Boolean> validator = Constraint.create(v.with());
+        Constraint<Boolean> validator = Converter.create(v.with());
 
         validator.setContext(contexts);
         validator.setIgnoreContext(ignoreContexts);
