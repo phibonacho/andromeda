@@ -8,6 +8,6 @@ public abstract class SingleValueConstraint<T> extends MultiValueConstraint {
         return validate((T) objects[0]);
     }
 
-    public abstract Boolean validate(T guard) throws Exception;
+    public abstract Boolean validate(T target);
 
 }

@@ -5,7 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 
 public class CompoundConstraint extends CoupleConstraint<Boolean, String> {
     @Override
-    public Boolean validate(Boolean guard, String boundGuard) {
+    public Boolean convert(Boolean guard, String boundGuard) {
         return guard && !StringUtils.isBlank(boundGuard) || !guard && StringUtils.isBlank(boundGuard);
     }
 

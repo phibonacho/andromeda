@@ -1,21 +1,20 @@
 package it.phibonachos.andromeda.types;
 
 import it.phibonachos.andromeda.exception.InvalidFieldException;
-import it.phibonachos.utils.FunctionalUtils;
-import it.phibonachos.utils.FunctionalWrapper;
+import it.phibonachos.ponos.converters.MultiValueConverter;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Objects;
 import java.util.Set;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 /**
  * Defines a {@link Constraint} which elaborate boolean verdicts, it can be used to validate a single or multiple properties.
  */
-public abstract class MultiValueConstraint implements Constraint<Boolean> {
+public abstract class MultiValueConstraint extends MultiValueConverter<Boolean> implements Constraint<Boolean> {
     protected String[] context, ignoreContext;
+
+    protected Boolean convertAll(Object ...objects) throws Exception {
+        return validateAll(objects);
+    }
 
     /**
      * Evaluate method collect all the properties needed by the validation class and retrieves them values in order to emit a verdict.
@@ -26,11 +25,7 @@ public abstract class MultiValueConstraint implements Constraint<Boolean> {
      * @throws Exception if at least one clause is not met or validate algorithm emit a negative verdict.
      */
     public <Target> Boolean evaluate(Target target, Method... props) throws Exception {
-        Supplier<Stream<Object>> sup = () -> Arrays.stream(props).map(FunctionalUtils.tryCatch(m -> m.invoke(target), m -> null));
-        if(sup.get().anyMatch(Objects::isNull))
-            throw new NullPointerException();
-
-        if(!validateAll(sup.get().toArray()))
+        if(!super.evaluate(target, props))
             throw new InvalidFieldException(" " + message());
         return true;
     }

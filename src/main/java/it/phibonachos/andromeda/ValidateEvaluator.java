@@ -65,6 +65,11 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         return super.validate();
     }
 
+    @Override
+    public Class<? extends Converter<Boolean>> fetchConverter(Validate annotation) {
+        return annotation.with();
+    }
+
     /**
      * @param s the stream containing field validate evaluation
      * @return true if all fields in object are valid
@@ -79,13 +84,13 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
     }
 
     @Override
-    protected Function<Method, Boolean> evaluateAlgorithm() {
-        return invokeOnNull(m -> !validateMethod(m) || (checkRequirements(m)  && checkConflicts(m)), this::validateAlternatives);
+    protected Function<Method, Boolean> sortPredicate() {
+        return m -> !getMainAnnotation(m).mandatory() && getMainAnnotation(m).boundTo().length == 0;
     }
 
     @Override
-    protected Function<Method, Boolean> sortPredicate() {
-        return m -> !getMainAnnotation(m).mandatory() && getMainAnnotation(m).boundTo().length == 0;
+    protected Function<Method, Boolean> evaluateAlgorithm() {
+        return invokeOnNull(m -> !validateMethod(m) || (checkRequirements(m)  && checkConflicts(m)), this::validateAlternatives);
     }
 
     /**
