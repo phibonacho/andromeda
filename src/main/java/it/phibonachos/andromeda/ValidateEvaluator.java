@@ -59,10 +59,9 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         return this;
     }
 
-    @Override
     public Boolean validate(){
         av.forEach((key, value) -> av.put(key, ValidationState.NOT_YET_EVALUATED)); // reset keys in case of reuse, prevent fail on cascade requirements
-        return super.validate();
+        return super.evaluate();
     }
 
     @Override
@@ -100,6 +99,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
      * @return true if method return a valid value
      * @throws Exception if not valid
      */
+    @Override
     protected Boolean evaluateMethod(Validate v, Method ...methods) throws Exception {
         Constraint validator = Converter.create(v.with());
 
