@@ -113,12 +113,14 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
     }
 
     /**
+     * <p>Extends {@link AbstractEvaluator#invokeOnNull}, providing handler for andromeda's custom Exceptions</p>
      * @param throwingFunction a function capable of throwing exceptions
      * @param fallback a function to call in case of failure
      * @param <R> a return type
      * @return the result of the evaluation of throwing function or fallback
      * @throws InvalidFieldException if evaluation non-null but invalid
      */
+    @Override
     protected  <R>Function<Method, R> invokeOnNull(FunctionalWrapper<Method, R, Exception> throwingFunction, Supplier<R> fallback) throws InvalidFieldException {
         return i -> {
             try {
@@ -139,6 +141,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         };
     }
 
+    @Override
     protected <R>Function<Method, R> invokeOnNull(FunctionalWrapper<Method, R, Exception> throwingFunction, Function<Method, R> fallback) throws InvalidFieldException {
         return i -> {
             try {
@@ -156,7 +159,6 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
             } catch (RequirementsException | NoAlternativeException e) {
                 throw new RequirementsException(displayName(i.getName()) + " requires " + e.getMessage());
             } catch (Exception e) {
-                e.printStackTrace();
                 throw new RuntimeException(e);
             }
         };
