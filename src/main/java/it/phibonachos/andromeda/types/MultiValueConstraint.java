@@ -9,46 +9,27 @@ import java.util.Set;
 /**
  * Defines a {@link Constraint} which elaborate boolean verdicts, it can be used to validate a single or multiple properties.
  */
-public abstract class MultiValueConstraint extends MultiValueConverter<Boolean> implements Constraint<Boolean> {
+public abstract class MultiValueConstraint extends MultiValueConverter<Boolean> implements Constraint {
     protected String[] context, ignoreContext;
 
-    protected Boolean convertAll(Object ...objects) throws Exception {
-        return validateAll(objects);
-    }
-
-    /**
-     * Evaluate method collect all the properties needed by the validation class and retrieves them values in order to emit a verdict.
-     * @param target Object from which props will be invoked
-     * @param props properties bounded to validation class (1-n)
-     * @param <Target> Type of target param
-     * @return true if all clauses are met.
-     * @throws Exception if at least one clause is not met or validate algorithm emit a negative verdict.
-     */
+    @Override
     public <Target> Boolean evaluate(Target target, Method... props) throws Exception {
         if(!super.evaluate(target, props))
             throw new InvalidFieldException(" " + message());
         return true;
     }
 
-    /**
-     * ValidateAll wraps the validation algorithm, in {@link SingleValueConstraint} and {@link CoupleConstraint} this method is masked with arity fixed method.
-     * @param objects properties bundled to validation.
-     * @return true if validation algorithm emit a positive verdict.
-     * @throws Exception if validation algorithm emit a negative verdict.
-     */
-    protected abstract Boolean validateAll(Object ...objects) throws Exception;
-
-    /**
-     * @return the string specifying why the validation failed.
-     */
+    @Override
     public String message() {
         return "fails constraint defined in " + this.getClass().getSimpleName();
     }
 
+    @Override
     public void setContext(Set<String> context) {
         this.context = context.toArray(new String[0]);
     }
 
+    @Override
     public void setIgnoreContext(Set<String> ignoreContext) {
         this.ignoreContext = ignoreContext.toArray(new String[0]);
     }

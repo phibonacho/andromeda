@@ -101,7 +101,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
      * @throws Exception if not valid
      */
     protected Boolean evaluateMethod(Validate v, Method ...methods) throws Exception {
-        Constraint<Boolean> validator = Converter.create(v.with());
+        Constraint validator = Converter.create(v.with());
 
         validator.setContext(contexts);
         validator.setIgnoreContext(ignoreContexts);
