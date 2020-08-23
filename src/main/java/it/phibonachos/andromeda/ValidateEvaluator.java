@@ -183,7 +183,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
             return true;
         if(check(method) == ValidationState.NOT_YET_EVALUATED)
             av.put(method.getName(), ValidationState.ON_EVALUATION);
-        return !evaluateMethod(getMainAnnotation(method), boundMethod.toArray(new Method[0])) || (checkRequirements(method)  && checkConflicts(method));
+        return !evaluateMethod(getMainAnnotation(method), boundMethod.toArray(Method[]::new)) || (checkRequirements(method)  && checkConflicts(method));
     }
 
     /**
