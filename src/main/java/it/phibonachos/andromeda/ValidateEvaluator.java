@@ -36,7 +36,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
      * @param ignorable Clauses to ignore during validation
      * @return a loosen validator
      */
-    public ValidateEvaluator<Target> ignoreClauses(Validate.Ignore ...ignorable){
+    public ValidateEvaluator<Target> ignoreClauses(Validate.Ignore... ignorable) {
         this.ignoreList = Set.of(ignorable);
         return this;
     }
@@ -45,7 +45,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
      * @param ignorable Contexts to ignore during validation
      * @return a validator who will ignore properties associated to contexts passed as arguments
      */
-    public ValidateEvaluator<Target> ignoreContexts(String ...ignorable){
+    public ValidateEvaluator<Target> ignoreContexts(String... ignorable) {
         this.ignoreContexts = Set.of(ignorable);
         return this;
     }
@@ -54,12 +54,12 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
      * @param contexts Contexts to which validation must be restricted
      * @return a specialized validator for the contexts passed as arguments
      */
-    public ValidateEvaluator<Target> onlyContexts(String ...contexts){
+    public ValidateEvaluator<Target> onlyContexts(String... contexts) {
         this.contexts = Set.of(contexts);
         return this;
     }
 
-    public Boolean validate(){
+    public Boolean validate() {
         av.forEach((key, value) -> av.put(key, ValidationState.NOT_YET_EVALUATED)); // reset keys in case of reuse, prevent fail on cascade requirements
         return super.evaluate();
     }
@@ -72,10 +72,10 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
     /**
      * @param s the stream containing field validate evaluation
      * @return true if all fields in object are valid
-     * @throws RequirementsException if a field requires the validation of another field
-     * @throws InvalidFieldException if a field do not match a specific format
+     * @throws RequirementsException  if a field requires the validation of another field
+     * @throws InvalidFieldException  if a field do not match a specific format
      * @throws ConflictFieldException if a field conflicts with at least another one
-     * @throws AnnotationException if a field inherit or use a non-coherent annotation
+     * @throws AnnotationException    if a field inherit or use a non-coherent annotation
      */
     @Override
     public Boolean evaluate(Stream<Boolean> s) throws RequirementsException, InvalidFieldException, ConflictFieldException, AnnotationException {
@@ -91,24 +91,25 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
 
     @Override
     protected Function<Method, Boolean> evaluateAlgorithm() {
-        return invokeOnNull(m -> !validateMethod(m) || (checkRequirements(m)  && checkConflicts(m)), this::validateAlternatives);
+        return invokeOnNull(m -> !validateMethod(m) || (checkRequirements(m) && checkConflicts(m)), this::validateAlternatives);
     }
 
     /**
      * <p>Validate method with a generic validate interface<p/>
-     * @param v a Validate annotation use for validate method result
+     *
+     * @param v        a Validate annotation use for validate method result
      * @param methods, method to validate
      * @return true if method return a valid value
      * @throws Exception if not valid
      */
     @Override
-    protected Boolean evaluateMethod(Validate v, Method ...methods) throws Exception {
+    protected Boolean evaluateMethod(Validate v, Method... methods) throws Exception {
         Constraint validator = Converter.create(v.with());
 
         validator.setContext(contexts);
         validator.setIgnoreContext(ignoreContexts);
 
-        if(validator instanceof SingleValueConstraint)
+        if (validator instanceof SingleValueConstraint)
             return validator.evaluate(this.t, methods[0]);
 
         return validator.evaluate(this.t, methods);
@@ -116,14 +117,15 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
 
     /**
      * <p>Extends {@link AbstractEvaluator#invokeOnNull}, providing handler for andromeda's custom Exceptions</p>
+     *
      * @param throwingFunction a function capable of throwing exceptions
-     * @param fallback a function to call in case of failure
-     * @param <R> a return type
+     * @param fallback         a function to call in case of failure
+     * @param <R>              a return type
      * @return the result of the evaluation of throwing function or fallback
      * @throws InvalidFieldException if evaluation non-null but invalid
      */
     @Override
-    protected  <R>Function<Method, R> invokeOnNull(FunctionalWrapper<Method, R, Exception> throwingFunction, Supplier<R> fallback) throws InvalidFieldException {
+    protected <R> Function<Method, R> invokeOnNull(FunctionalWrapper<Method, R, Exception> throwingFunction, Supplier<R> fallback) throws InvalidFieldException {
         return i -> {
             try {
                 return throwingFunction.accept(i);
@@ -144,7 +146,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
     }
 
     @Override
-    protected <R>Function<Method, R> invokeOnNull(FunctionalWrapper<Method, R, Exception> throwingFunction, Function<Method, R> fallback) throws InvalidFieldException {
+    protected <R> Function<Method, R> invokeOnNull(FunctionalWrapper<Method, R, Exception> throwingFunction, Function<Method, R> fallback) throws InvalidFieldException {
         return i -> {
             try {
                 return throwingFunction.accept(i);
@@ -168,7 +170,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
 
     /* ----------------- PRIVATE METHODS ----------------- */
 
-    private ValidationState check(Method method) throws InvalidFieldException{
+    private ValidationState check(Method method) throws InvalidFieldException {
         return Optional.ofNullable(av.get(method.getName())).orElse(ValidationState.NOT_YET_EVALUATED);
     }
 
@@ -181,11 +183,11 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
                 .collect(Collectors.toList());
 
         boundMethod.add(0, method);
-        if(check(method) == ValidationState.VALID)
+        if (check(method) == ValidationState.VALID)
             return true;
-        if(check(method) == ValidationState.NOT_YET_EVALUATED)
+        if (check(method) == ValidationState.NOT_YET_EVALUATED)
             av.put(method.getName(), ValidationState.ON_EVALUATION);
-        return !evaluateMethod(getMainAnnotation(method), boundMethod.toArray(Method[]::new)) || (checkRequirements(method)  && checkConflicts(method));
+        return !evaluateMethod(getMainAnnotation(method), boundMethod.toArray(Method[]::new)) || (checkRequirements(method) && checkConflicts(method));
     }
 
     /**
@@ -193,17 +195,17 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
      * @return true if at least one of the alternatives is valid or mandatory is ignorable
      * @throws InvalidFieldException if no non-null alternatives are found or alternatives are ignored
      */
-    private boolean validateAlternatives(Method method) throws InvalidFieldException{
+    private boolean validateAlternatives(Method method) throws InvalidFieldException {
         av.put(method.getName(), ValidationState.NOT_SET);
         Validate ann = getMainAnnotation(method);
 
-        if(isIgnorable(Validate.Ignore.MANDATORY)
+        if (isIgnorable(Validate.Ignore.MANDATORY)
                 || !ann.mandatory()
                 || Arrays.stream(ann.context()).anyMatch(ctx -> ignoreContexts.contains(ctx))
-                || ( !contexts.isEmpty() && Arrays.stream(ann.context()).noneMatch(ctx -> contexts.contains(ctx))))
+                || (!contexts.isEmpty() && Arrays.stream(ann.context()).noneMatch(ctx -> contexts.contains(ctx))))
             return true;
 
-        if(isIgnorable(Validate.Ignore.ALTERNATIVES) || ann.alternatives().length == 0)
+        if (isIgnorable(Validate.Ignore.ALTERNATIVES) || ann.alternatives().length == 0)
             throw new InvalidFieldException(method);
 
         return validateAlternatives(method, ann);
@@ -211,16 +213,17 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
 
     /**
      * <p>Retrieve conflictual methods with one passed as argument</p>
+     *
      * @param m method with possible conflicts
      * @return true if no conflicts found
      * @throws ConflictFieldException if conflicts are found
      */
     private Boolean checkConflicts(Method m) throws ConflictFieldException {
         Validate ann = getMainAnnotation(m);
-        if(!isIgnorable(Validate.Ignore.CONFLICTS)
+        if (!isIgnorable(Validate.Ignore.CONFLICTS)
                 && List.of(ann.conflicts())
                 .stream()
-                .map(FunctionalUtils.tryCatch(mName ->  new PropertyDescriptor(mName, this.t.getClass()).getReadMethod()))
+                .map(FunctionalUtils.tryCatch(mName -> new PropertyDescriptor(mName, this.t.getClass()).getReadMethod()))
                 .map(invokeOnNull(method -> validateChildMethod(ann, method), () -> false))
                 .filter(valid -> valid)
                 .findFirst().orElse(false)) throw new ConflictFieldException(m, List.of(ann.conflicts()));
@@ -230,22 +233,23 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
 
     /**
      * <p>Requirements must be met by parent mandatory annotations and child annotation of a mandatory parent</p>
+     *
      * @param method with requirements to satisfy
      * @return true if all requirements are met
      * @throws RequirementsException if some requirements are not met
      */
     private Boolean checkRequirements(Method method) throws RequirementsException, InvalidFieldException {
-        if(isIgnorable(Validate.Ignore.REQUIREMENTS)) // if method already validated return true
+        if (isIgnorable(Validate.Ignore.REQUIREMENTS)) // if method already validated return true
             return true;
 
         Validate ann = getMainAnnotation(method);
         av.put(method.getName(), ValidationState.ON_EVALUATION);
 
         // check requirements for field
-        if(List.of(ann.requires())
+        if (List.of(ann.requires())
                 .stream()
                 // create a stream of require methods (not null)
-                .map(FunctionalUtils.tryCatch(mName ->  new PropertyDescriptor(mName, this.t.getClass()).getReadMethod()))
+                .map(FunctionalUtils.tryCatch(mName -> new PropertyDescriptor(mName, this.t.getClass()).getReadMethod()))
                 // try to validate methods with their own annotation
                 .map(invokeOnNull(m -> !validateChildMethod(ann, m) || checkChildRequirements(m) && checkChildConflicts(m), this::validateChildAlternatives))
                 .filter(valid -> !valid)
@@ -260,13 +264,13 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         return isAssessable(method.getName()) || evaluateMethod(Optional.ofNullable(getMainAnnotation(method)).orElse(v), method);
     }
 
-    private boolean validateChildAlternatives(Method method) throws InvalidFieldException{
-        if(check(method) == ValidationState.VALID) // if method already validated return true
+    private boolean validateChildAlternatives(Method method) throws InvalidFieldException {
+        if (check(method) == ValidationState.VALID) // if method already validated return true
             return true;
 
         Validate ann = getMainAnnotation(method);
 
-        if(isIgnorable(Validate.Ignore.ALTERNATIVES))
+        if (isIgnorable(Validate.Ignore.ALTERNATIVES))
             throw new InvalidFieldException(method);
 
         return validateAlternatives(method, ann);
@@ -285,12 +289,12 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
      * this means that they have no specific requirements or have same as parent
      */
     private Boolean checkChildRequirements(Method method) throws RequirementsException {
-        if(av.containsKey(method.getName()) && av.get(method.getName()).equals(ValidationState.ON_EVALUATION))
+        if (av.containsKey(method.getName()) && av.get(method.getName()).equals(ValidationState.ON_EVALUATION))
             throw new CyclicRequirementException("Detected cyclic dependency with " + method.getName());
         return getMainAnnotation(method) == null || checkRequirements(method);
     }
 
-    private boolean isIgnorable(Validate.Ignore ignorable){
+    private boolean isIgnorable(Validate.Ignore ignorable) {
         return ignoreList.contains(ignorable);
     }
 
@@ -298,16 +302,16 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
      * @return true if the property hasn't been already evaluated or it is valid
      */
     private boolean isAssessable(String propertyName) {
-        return av.containsKey(propertyName) && ! (av.get(propertyName).equals(ValidationState.NOT_SET) || av.get(propertyName).equals(ValidationState.ON_EVALUATION));
+        return av.containsKey(propertyName) && !(av.get(propertyName).equals(ValidationState.NOT_SET) || av.get(propertyName).equals(ValidationState.ON_EVALUATION));
     }
 
-    private String displayName(String method){
+    private String displayName(String method) {
         return Stream.of(method).map(name -> name.replaceAll("^(get|is|has)", "")).map(name -> name.substring(0, 1).toLowerCase().concat(name.substring(1))).collect(Collectors.joining());
     }
 
     private boolean validateAlternatives(Method method, Validate ann) {
         return Arrays.stream(ann.alternatives())
-                .map(FunctionalUtils.tryCatch(mName ->  new PropertyDescriptor(mName, this.t.getClass()).getReadMethod()))
+                .map(FunctionalUtils.tryCatch(mName -> new PropertyDescriptor(mName, this.t.getClass()).getReadMethod()))
                 .map(invokeOnNull(
                         m -> !validateChildMethod(ann, m) || (checkChildRequirements(m) && checkChildConflicts(m)),
                         m -> false))
