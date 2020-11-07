@@ -1,6 +1,6 @@
 name: Java CI
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
   build:
@@ -8,15 +8,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Generate settings.xml for Maven Builds
-      uses: whelk-io/maven-settings-xml-action@v13
-      with:
-        servers: '[{ "id": "github", "username": "${{github.repository_owner}}", "password": "${{secrets.GITHUB_TOKEN}}" }]'
-        repositories: '[{ "id": "github", "name" : "GitHub rollingflamingo Apache Maven Packages", "url": "https://maven.pkg.github.com/rollingflamingo/ponos" }]'
     - uses: actions/checkout@v2
     - name: Set up JDK 11
       uses: actions/setup-java@v1
       with:
         java-version: 11
+    - name: Generate settings.xml for Maven Builds
+      uses: whelk-io/maven-settings-xml-action@v13
+      with:
+        servers: '[{ "id": "github", "username": "${{github.repository_owner}}", "password": "${{secrets.GITHUB_TOKEN}}" }]'
+        repositories: '[{ "id": "github", "name" : "GitHub rollingflamingo Apache Maven Packages", "url": "https://maven.pkg.github.com/rollingflamingo/ponos" }]'
     - name: Build with Maven
       run: mvn -B package --file pom.xml
