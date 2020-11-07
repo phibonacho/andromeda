@@ -6,7 +6,7 @@
 
     <groupId>it.phibonachos</groupId>
     <artifactId>andromeda</artifactId>
-    <version>1.2.1</version>
+    <version>1.2.2</version>
     <dependencies>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -22,7 +22,7 @@
         <dependency>
             <groupId>it.phibonachos</groupId>
             <artifactId>ponos</artifactId>
-            <version>1.0.1</version>
+            <version>1.1.0</version>
         </dependency>
     </dependencies>
     <properties>

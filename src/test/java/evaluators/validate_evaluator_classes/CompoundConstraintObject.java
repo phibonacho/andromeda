@@ -17,6 +17,7 @@ public class CompoundConstraintObject {
     public void setProp(String prop) {
         this.prop = prop;
     }
+
     @Validate(with = CompoundConstraint.class, boundTo = "prop2")
     public boolean isProp1() {
         return prop1;

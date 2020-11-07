@@ -83,8 +83,10 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
     }
 
     @Override
-    protected Function<Method, Boolean> sortPredicate() {
-        return m -> !getMainAnnotation(m).mandatory() && getMainAnnotation(m).boundTo().length == 0;
+    public Comparator<Method> comparingPredicate() {
+        return Comparator.comparing((Method m) -> !getMainAnnotation(m).mandatory())
+                .thenComparingInt(m -> getMainAnnotation(m).requires().length)
+                .thenComparingInt(m -> getMainAnnotation(m).boundTo().length);
     }
 
     @Override
@@ -245,7 +247,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
                 // create a stream of require methods (not null)
                 .map(FunctionalUtils.tryCatch(mName ->  new PropertyDescriptor(mName, this.t.getClass()).getReadMethod()))
                 // try to validate methods with their own annotation
-                .map(invokeOnNull(m -> !validateChildMethod(ann, m) || checkChildRequirements(m) && checkChildConflicts(m), m -> validateChildAlternatives(m, new RequirementsException(method, List.of(ann.requires())))))
+                .map(invokeOnNull(m -> !validateChildMethod(ann, m) || checkChildRequirements(m) && checkChildConflicts(m), this::validateChildAlternatives))
                 .filter(valid -> !valid)
                 .findFirst().orElse(true)) return true;
         throw new RequirementsException(method, List.of(ann.requires()));
@@ -258,7 +260,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         return isAssessable(method.getName()) || evaluateMethod(Optional.ofNullable(getMainAnnotation(method)).orElse(v), method);
     }
 
-    private <E extends RuntimeException>boolean validateChildAlternatives(Method method, E exception) throws InvalidFieldException{
+    private boolean validateChildAlternatives(Method method) throws InvalidFieldException{
         if(check(method) == ValidationState.VALID) // if method already validated return true
             return true;
 
