@@ -29,7 +29,7 @@ public class ComplexObject {
         this.prop1 = prop1;
     }
 
-    @Validate(with = StringValue.class, mandatory = true, requires = {"prop1", "prop0"}) // validation priority 2
+    @Validate(with = StringValue.class, mandatory = true, requires = {"prop1"}) // validation priority 2
     public String getProp2() {
         return prop2;
     }

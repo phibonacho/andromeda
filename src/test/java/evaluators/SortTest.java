@@ -29,7 +29,6 @@ public class SortTest {
         try {
             assert validator.validate();
         } catch (Exception e) {
-            System.err.println(e.getMessage());
             assert e.getMessage().equals("prop2 cannot be null");
         }
 
@@ -39,7 +38,6 @@ public class SortTest {
         try {
             assert validator.validate();
         } catch (Exception e) {
-            System.err.println(e.getMessage());
             assert e.getMessage().equals("prop3 cannot be null");
         }
 
@@ -49,7 +47,6 @@ public class SortTest {
         try {
             assert validator.validate();
         } catch (Exception e) {
-            System.err.println(e.getMessage());
             assert e.getMessage().equals("prop4 cannot be null");
         }
 
@@ -58,7 +55,6 @@ public class SortTest {
         try {
             assert validator.validate();
         } catch (Exception e) {
-            System.err.println(e.getMessage());
             assert false;
         }
     }
