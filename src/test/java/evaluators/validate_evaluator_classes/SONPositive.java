@@ -1,7 +1,7 @@
 package evaluators.validate_evaluator_classes;
 
 import it.phibonachos.andromeda.Validate;
-import it.phibonachos.andromeda.types.PositiveNum;
+import it.phibonachos.andromeda.types.mono.PositiveNum;
 
 public class SONPositive {
     private int prop;

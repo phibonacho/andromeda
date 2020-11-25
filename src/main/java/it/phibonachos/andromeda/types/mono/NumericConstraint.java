@@ -1,4 +1,6 @@
-package it.phibonachos.andromeda.types;
+package it.phibonachos.andromeda.types.mono;
+
+import it.phibonachos.andromeda.types.SingleValueConstraint;
 
 import java.util.Optional;
 

@@ -85,8 +85,8 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
     @Override
     public Comparator<Method> comparingPredicate() {
         return Comparator.comparing((Method m) -> !getMainAnnotation(m).mandatory())
-                .thenComparingInt(m -> getMainAnnotation(m).requires().length)
-                .thenComparingInt(m -> getMainAnnotation(m).boundTo().length);
+                .thenComparingInt(m -> getMainAnnotation(m).boundTo().length)
+                .thenComparingInt(m -> getMainAnnotation(m).requires().length);
     }
 
     @Override

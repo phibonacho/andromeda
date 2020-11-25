@@ -2,7 +2,7 @@ package evaluators.validate_evaluator_classes;
 
 import evaluators.constraints.CompoundConstraint;
 import it.phibonachos.andromeda.Validate;
-import it.phibonachos.andromeda.types.StringValue;
+import it.phibonachos.andromeda.types.mono.StringValue;
 
 public class CompoundConstraintObject {
     private String prop;

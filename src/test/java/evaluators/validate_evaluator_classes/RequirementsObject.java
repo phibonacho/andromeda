@@ -1,8 +1,8 @@
 package evaluators.validate_evaluator_classes;
 
 import it.phibonachos.andromeda.Validate;
-import it.phibonachos.andromeda.types.NumericConstraint;
-import it.phibonachos.andromeda.types.StringValue;
+import it.phibonachos.andromeda.types.mono.NumericConstraint;
+import it.phibonachos.andromeda.types.mono.StringValue;
 
 public class RequirementsObject {
     private String prop;

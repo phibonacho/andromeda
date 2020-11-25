@@ -1,7 +1,7 @@
 package evaluators.validate_evaluator_classes;
 
 import it.phibonachos.andromeda.Validate;
-import it.phibonachos.andromeda.types.StringValue;
+import it.phibonachos.andromeda.types.mono.StringValue;
 
 public class CyclicRequirementsObject {
     private String prop;

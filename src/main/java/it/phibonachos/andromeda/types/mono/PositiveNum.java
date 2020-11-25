@@ -1,4 +1,4 @@
-package it.phibonachos.andromeda.types;
+package it.phibonachos.andromeda.types.mono;
 
 import java.util.Optional;
 

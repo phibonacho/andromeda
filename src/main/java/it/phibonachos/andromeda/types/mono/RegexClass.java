@@ -1,9 +1,13 @@
-package it.phibonachos.andromeda.types;
+package it.phibonachos.andromeda.types.mono;
 
-import java.util.Set;
-
+/**
+ * <p>This class provides a template to validate strings using regex.</p>
+ */
 public abstract class RegexClass extends StringValue {
 
+    /**
+     * @return The regex to match.
+     */
     public abstract String regex();
 
     @Override

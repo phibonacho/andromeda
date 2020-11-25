@@ -1,13 +1,20 @@
-package it.phibonachos.andromeda.types;
+package it.phibonachos.andromeda.types.mono;
 
 import it.phibonachos.andromeda.ValidateEvaluator;
 import it.phibonachos.andromeda.exception.InvalidFieldException;
 import it.phibonachos.andromeda.exception.InvalidNestedFieldException;
+import it.phibonachos.andromeda.types.SingleValueConstraint;
 
+/**
+ * <p>This class provides a handful way to propagate validation on nested objects.
+ * A new validator will be instantiated to validate the child object.</p>
+ *
+ * @param <T> Generic class to be validated
+ */
 public class NestedVal<T> extends SingleValueConstraint<T> {
 
     @Override
-    public Boolean validate(T guard) throws InvalidFieldException, InvalidNestedFieldException {
+    public Boolean validate(T guard) throws InvalidFieldException, InvalidNestedFieldException, NullPointerException {
         try {
             return new ValidateEvaluator<>(guard)
                     .onlyContexts(this.context)
