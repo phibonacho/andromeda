@@ -2,7 +2,6 @@ package it.phibonachos.andromeda;
 
 import it.phibonachos.andromeda.exception.*;
 import it.phibonachos.andromeda.types.Constraint;
-import it.phibonachos.andromeda.types.SingleValueConstraint;
 import it.phibonachos.ponos.AbstractEvaluator;
 import it.phibonachos.ponos.converters.Converter;
 import it.phibonachos.utils.FunctionalUtils;
@@ -16,8 +15,9 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean, Validate, InvalidFieldException> {
+public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean, Validate, InvalidFieldException> implements Validator {
     final private Map<String, ValidationState> av;
+    final private Map<String, Object> cache;
     private Set<Validate.Ignore> ignoreList;
     private Set<String> contexts, ignoreContexts;
 
@@ -27,6 +27,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         super(t);
         this.annotationClass = Validate.class;
         av = new HashMap<>();
+        cache = new HashMap<>();
         ignoreList = new HashSet<>();
         contexts = new HashSet<>();
         ignoreContexts = new HashSet<>();
@@ -61,6 +62,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
 
     public Boolean validate() {
         av.forEach((key, value) -> av.put(key, ValidationState.NOT_YET_EVALUATED)); // reset keys in case of reuse, prevent fail on cascade requirements
+        cache.clear();
         return super.evaluate();
     }
 
@@ -109,10 +111,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         validator.setContext(contexts);
         validator.setIgnoreContext(ignoreContexts);
 
-        if (validator instanceof SingleValueConstraint)
-            return validator.evaluate(this.t, methods[0]);
-
-        return validator.evaluate(this.t, methods);
+        return validator.evaluate(fetchValues(this.t, methods));
     }
 
     /**
@@ -166,6 +165,24 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
                 throw new RuntimeException(e);
             }
         };
+    }
+
+    @Override
+    protected Object[] fetchValues(Target target, Method ...getters) {
+        List<Object> result = new ArrayList<>();
+        for(Method getter : getters)
+            if(!cache.containsKey(getter.getName()))
+                try {
+                    Object aux = getter.invoke(target);
+                    cache.put(getter.getName(), aux);
+                    result.add(aux);
+                } catch (Exception e) {
+                    cache.put(getter.getName(), null);
+                }
+            else
+                result.add(cache.get(getter.getName()));
+
+        return result.toArray();
     }
 
     /* ----------------- PRIVATE METHODS ----------------- */

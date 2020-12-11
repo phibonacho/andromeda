@@ -1,9 +1,9 @@
 package it.phibonachos.andromeda.types;
 
-import it.phibonachos.andromeda.exception.InvalidFieldException;
 import it.phibonachos.ponos.converters.MultiValueConverter;
 
-import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -13,10 +13,14 @@ public abstract class MultiValueConstraint extends MultiValueConverter<Boolean> 
     protected String[] context, ignoreContext;
 
     @Override
-    public <Target> Boolean evaluate(Target target, Method... props) throws Exception {
-        if(!super.evaluate(target, props))
-            throw new InvalidFieldException(" " + message());
-        return true;
+    public Boolean evaluate(Object... props) throws Exception {
+        if(Objects.isNull(props[0]))
+            throw new NullPointerException();
+
+        if(Arrays.stream(props).allMatch(Objects::isNull))
+            throw new RuntimeException("All bounded properties are not instantiated");
+
+        return super.evaluate(props);
     }
 
     @Override

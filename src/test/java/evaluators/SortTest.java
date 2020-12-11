@@ -55,6 +55,7 @@ public class SortTest {
         try {
             assert validator.validate();
         } catch (Exception e) {
+            e.printStackTrace();
             assert false;
         }
     }

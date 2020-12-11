@@ -3,7 +3,7 @@ package evaluators;
 
 import evaluators.validate_evaluator_classes.*;
 import it.phibonachos.andromeda.ValidateEvaluator;
-import it.phibonachos.andromeda.exception.*;
+import it.phibonachos.andromeda.exception.InvalidFieldException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -89,6 +89,11 @@ public class ValidateEvaluatorTest {
         } catch (Exception e) {
             assert e instanceof InvalidFieldException;
         }
+    }
+
+    @Test
+    public void OctetConstraint() {
+
     }
 
 }

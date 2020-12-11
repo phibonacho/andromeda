@@ -39,6 +39,15 @@ public class BoundToClauseTest {
         assert ve.validate();
     }
 
+    @Test
+    public void C8ConstraintTest() {
+        OctetTestObject oto = new OctetTestObject();
+
+        oto.setProp1("ciao");
+
+        new ValidateEvaluator<>(oto).validate();
+    }
+
     /* NEGATIVE TEST */
 
 }

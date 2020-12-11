@@ -39,11 +39,11 @@ public class ComplexObject {
     }
 
     @Validate(with = CompoundConstraint.class, mandatory = true, boundTo = "prop2") // validation priority 3
-    public boolean isProp3() {
+    public Boolean isProp3() {
         return prop3;
     }
 
-    public void setProp3(boolean prop3) {
+    public void setProp3(Boolean prop3) {
         this.prop3 = prop3;
     }
 
