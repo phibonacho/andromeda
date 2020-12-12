@@ -62,7 +62,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
 
     public Boolean validate() {
         av.forEach((key, value) -> av.put(key, ValidationState.NOT_YET_EVALUATED)); // reset keys in case of reuse, prevent fail on cascade requirements
-        cache.clear();
+        cache.clear(); // clear cache in case of reuse
         return super.evaluate();
     }
 
@@ -81,7 +81,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
      */
     @Override
     public Boolean evaluate(Stream<Boolean> s) throws RequirementsException, InvalidFieldException, ConflictFieldException, AnnotationException {
-        return s.filter(bool -> !bool).findFirst().orElse(true); // lazy find first false validation
+        return s.reduce(true, (acc, val) -> acc && val);
     }
 
     @Override
