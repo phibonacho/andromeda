@@ -49,6 +49,8 @@ public class AlternativesClauseTest {
 
             assert new ValidateEvaluator<>(cao).validate();
         } catch (Exception e){
+            System.out.println(e.getMessage());
+            System.out.println(e.getClass().getSimpleName());
             assert e instanceof NoAlternativeException;
             return;
         }

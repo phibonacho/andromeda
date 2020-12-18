@@ -6,10 +6,12 @@ import it.phibonachos.ponos.AbstractEvaluator;
 import it.phibonachos.ponos.converters.Converter;
 import it.phibonachos.utils.FunctionalUtils;
 import it.phibonachos.utils.FunctionalWrapper;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -71,17 +73,9 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         return annotation.with();
     }
 
-    /**
-     * @param s the stream containing field validate evaluation
-     * @return true if all fields in object are valid
-     * @throws RequirementsException  if a field requires the validation of another field
-     * @throws InvalidFieldException  if a field do not match a specific format
-     * @throws ConflictFieldException if a field conflicts with at least another one
-     * @throws AnnotationException    if a field inherit or use a non-coherent annotation
-     */
     @Override
-    public Boolean evaluate(Stream<Boolean> s) throws RequirementsException, InvalidFieldException, ConflictFieldException, AnnotationException {
-        return s.reduce(true, (acc, val) -> acc && val);
+    protected BinaryOperator<Boolean> evaluationReductor() {
+        return (acc,val) -> acc && val;
     }
 
     @Override
@@ -91,27 +85,27 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
                 .thenComparingInt(m -> getMainAnnotation(m).requires().length);
     }
 
-    @Override
+//    @Override
     protected Function<Method, Boolean> evaluateAlgorithm() {
-        return invokeOnNull(m -> !validateMethod(m) || (checkRequirements(m) && checkConflicts(m)), this::validateAlternatives);
+        return null;//invokeOnNull(m -> !validateMethod(m) || (checkRequirements(m) && checkConflicts(m)), this::validateAlternatives);
     }
 
     /**
      * <p>Validate method with a generic validate interface<p/>
      *
-     * @param v        a Validate annotation use for validate method result
-     * @param methods, method to validate
+     *
+     * @param v Annotation carrying all the validation information
+     * @param method target method to evaluate
      * @return true if method return a valid value
      * @throws Exception if not valid
      */
-    @Override
-    protected Boolean evaluateMethod(Validate v, Method... methods) throws Exception {
+    protected Boolean evaluateMethod(Validate v, Method method) throws Exception {
         Constraint validator = Converter.create(v.with());
 
         validator.setContext(contexts);
         validator.setIgnoreContext(ignoreContexts);
 
-        return validator.evaluate(fetchValues(this.t, methods));
+        return validator.evaluate(ArrayUtils.addAll(new Object[]{fetchValue(method)}, fetchValues(v.boundTo())));
     }
 
     /**
@@ -167,24 +161,6 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         };
     }
 
-    @Override
-    protected Object[] fetchValues(Target target, Method ...getters) {
-        List<Object> result = new ArrayList<>();
-        for(Method getter : getters)
-            if(!cache.containsKey(getter.getName()))
-                try {
-                    Object aux = getter.invoke(target);
-                    cache.put(getter.getName(), aux);
-                    result.add(aux);
-                } catch (Exception e) {
-                    cache.put(getter.getName(), null);
-                }
-            else
-                result.add(cache.get(getter.getName()));
-
-        return result.toArray();
-    }
-
     /* ----------------- PRIVATE METHODS ----------------- */
 
     private ValidationState check(Method method) throws InvalidFieldException {
@@ -192,19 +168,14 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
     }
 
     /**
-     * <p>Short hand for {@link #evaluateMethod(Validate, Method...)} uses method own validate annotation</p>
+     * <p>Short hand for {@link #evaluateMethod(Validate, Method)} uses method own validate annotation</p>
      */
     private Boolean validateMethod(Method method) throws Exception {
-        List<Method> boundMethod = Arrays.stream(getMainAnnotation(method).boundTo())
-                .map(FunctionalUtils.tryCatch(name -> new PropertyDescriptor(name, this.t.getClass()).getReadMethod()))
-                .collect(Collectors.toList());
-
-        boundMethod.add(0, method);
         if (check(method) == ValidationState.VALID)
             return true;
         if (check(method) == ValidationState.NOT_YET_EVALUATED)
             av.put(method.getName(), ValidationState.ON_EVALUATION);
-        return !evaluateMethod(getMainAnnotation(method), boundMethod.toArray(Method[]::new)) || (checkRequirements(method) && checkConflicts(method));
+        return !evaluateMethod(getMainAnnotation(method), method) || (checkRequirements(method) && checkConflicts(method));
     }
 
     /**
@@ -228,6 +199,12 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         return validateAlternatives(method, ann);
     }
 
+    private boolean validateAlternatives(String... alternatives) throws NoAlternativeException {
+        if(alternatives.length > 0 && Arrays.stream(fetchValues(alternatives)).anyMatch(Objects::isNull))
+           throw new NoAlternativeException(Arrays.stream(alternatives).reduce("", (acc, val) -> acc + ", " + val));
+        return true;
+    }
+
     /**
      * <p>Retrieve conflictual methods with one passed as argument</p>
      *
@@ -245,6 +222,14 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
                 .filter(valid -> valid)
                 .findFirst().orElse(false)) throw new ConflictFieldException(m, List.of(ann.conflicts()));
         av.put(m.getName(), ValidationState.VALID);
+        return true;
+    }
+
+    private boolean checkConflicts(String ...conflicts) {
+        if(Arrays.stream(fetchValues(conflicts))
+                .allMatch(Objects::isNull))
+            throw new ConflictFieldException(Arrays.stream(conflicts).reduce((acc, val) -> acc + ", " + val) + " are conflictual");
+
         return true;
     }
 
@@ -274,8 +259,17 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         throw new RequirementsException(method, List.of(ann.requires()));
     }
 
+    // check props are instatiated and load in cache
+    private Boolean checkRequirements(String ...requiredProperties) {
+        if(requiredProperties.length > 0 && Arrays.stream(fetchValues(requiredProperties))
+                .anyMatch(Objects::isNull))
+            throw new RequirementsException(Arrays.stream(requiredProperties).reduce((acc,val) -> acc + ", " + val) + " are required");
+
+        return true;
+    }
+
     /**
-     * <p>{@link #evaluateMethod(Validate, Method...)} wrapper but use a fallback annotation if not annotated</p>
+     * <p>{@link #evaluateMethod(Validate, Method)} wrapper but use a fallback annotation if not annotated</p>
      */
     private Boolean validateChildMethod(Validate v, Method method) throws Exception {
         return isAssessable(method.getName()) || evaluateMethod(Optional.ofNullable(getMainAnnotation(method)).orElse(v), method);
@@ -337,4 +331,32 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
                 .findFirst().orElseThrow(() -> new NoAlternativeException(method, List.of(ann.alternatives())));
     }
 
+    @Override
+    protected Boolean process(Validate v, Converter<Boolean> converter, Object prop, Method target) throws Exception {
+        av.put(target.getName(), ValidationState.ON_EVALUATION);
+        try {
+            return !super.process(v, converter, prop, target) || (checkRequirements(v.requires()) && checkConflicts(v.conflicts()));
+        } catch (NullPointerException npe) { // check alternatives
+            System.out.println("validating alternatives");
+            try {
+                return validateAlternatives(v.alternatives());
+            } catch (NoAlternativeException nae) {
+                throw new NoAlternativeException(target, Arrays.asList(v.alternatives().clone()));
+            }
+        } catch (InvalidCollectionFieldException e) {
+            throw new InvalidFieldException("Collection " + displayName(target.getName()) + "[] : " + e.getMessage());
+        } catch (InvalidPropertiesFormatException | InvalidFieldException | InvalidNestedFieldException e) {
+            throw new InvalidFieldException(displayName(target.getName()) + e.getMessage());
+        } catch (ConflictFieldException e) {
+            throw new ConflictFieldException(e.getMessage());
+        } catch (CyclicRequirementException e) {
+            throw new CyclicRequirementException(e.getMessage());
+        } catch (RequirementsException e) {
+            throw new RequirementsException(displayName(target.getName()) + " : " + e.getMessage());
+        } catch (NoAlternativeException nae) {
+            throw new NoAlternativeException(displayName(target.getName()) + " : " + nae.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

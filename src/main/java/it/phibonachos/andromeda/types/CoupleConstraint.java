@@ -9,4 +9,9 @@ public abstract class CoupleConstraint<F,S> extends MultiValueConstraint {
     }
 
     public abstract Boolean validate(F guard, S boundGuard) throws Exception;
+
+    @Override
+    public int arity() {
+        return 2;
+    }
 }

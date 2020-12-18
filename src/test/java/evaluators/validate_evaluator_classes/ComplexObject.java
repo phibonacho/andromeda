@@ -1,5 +1,6 @@
 package evaluators.validate_evaluator_classes;
 
+import evaluators.constraints.C2Constraint;
 import evaluators.constraints.CompoundConstraint;
 import it.phibonachos.andromeda.Validate;
 import it.phibonachos.andromeda.types.mono.StringValue;
@@ -47,7 +48,7 @@ public class ComplexObject {
         this.prop3 = prop3;
     }
 
-    @Validate(with = StringValue.class, mandatory = true, requires = "prop3", boundTo = "prop1") // validation priority 4
+    @Validate(with = C2Constraint.class, mandatory = true, requires = "prop3", boundTo = "prop1") // validation priority 4
     public String getProp4() {
         return prop4;
     }

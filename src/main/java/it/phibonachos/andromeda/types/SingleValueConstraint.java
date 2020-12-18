@@ -10,4 +10,7 @@ public abstract class SingleValueConstraint<T> extends MultiValueConstraint {
 
     public abstract Boolean validate(T target) throws Exception;
 
+    public int arity() {
+        return 1;
+    }
 }

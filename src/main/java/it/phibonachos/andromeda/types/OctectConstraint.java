@@ -9,4 +9,8 @@ public abstract class OctectConstraint<F,S,T,Frth,Ffth,Sxth,Svth,E> extends Mult
     }
 
     public abstract Boolean validate(F guard, S boundGuard, T third, Frth fourth, Ffth fifth, Sxth sixth, Svth seventh, E eighth) throws Exception;
+
+    public int arity() {
+        return 8;
+    }
 }
