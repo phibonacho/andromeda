@@ -91,8 +91,7 @@ public class RequiresClauseTest {
         try {
             new ValidateEvaluator<>(br).validate();
         } catch (Exception e) {
-            System.out.println(e.getMessage());
-            e.printStackTrace();
+            assert e instanceof InvalidFieldException;
         }
     }
 
