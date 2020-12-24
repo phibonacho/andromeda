@@ -83,6 +83,21 @@ public class RequiresClauseTest {
         }
     }
 
+    @Test
+    public void boundRequirements() {
+        BoundReouirement br = new BoundReouirement();
+
+        br.setProp("a mandatory prop");
+        br.setBoundProp("another prop with bound validation values");
+
+        try {
+            new ValidateEvaluator<>(br).validate();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     /* NEGATIVE TEST */
 
     @Test
