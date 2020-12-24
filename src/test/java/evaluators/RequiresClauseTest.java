@@ -8,9 +8,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @RunWith(JUnit4.class)
 public class RequiresClauseTest {
 
@@ -85,10 +82,11 @@ public class RequiresClauseTest {
 
     @Test
     public void boundRequirements() {
-        BoundReouirement br = new BoundReouirement();
+        BoundRequirement br = new BoundRequirement();
 
         br.setProp("a mandatory prop");
         br.setBoundProp("another prop with bound validation values");
+        br.setPropWithRequirements("a prop with requirements");
 
         try {
             new ValidateEvaluator<>(br).validate();

@@ -4,7 +4,7 @@ import evaluators.constraints.C2Constraint;
 import it.phibonachos.andromeda.Validate;
 import it.phibonachos.andromeda.types.mono.StringValue;
 
-public class BoundReouirement {
+public class BoundRequirement {
     private String prop;
     private String boundProp;
     private String propWithRequirements;
