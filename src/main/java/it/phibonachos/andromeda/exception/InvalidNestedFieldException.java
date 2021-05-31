@@ -1,11 +1,13 @@
 package it.phibonachos.andromeda.exception;
 
+import it.phibonachos.ponos.converters.ConverterException;
+
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class InvalidNestedFieldException extends RuntimeException {
+public class InvalidNestedFieldException extends ConverterException {
 
     public InvalidNestedFieldException(String message) {
         super(message);

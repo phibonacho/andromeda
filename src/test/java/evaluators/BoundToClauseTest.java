@@ -24,7 +24,11 @@ public class BoundToClauseTest {
         cco.setProp1(true);
         cco.setProp2("this is required since prop1 is true");
 
-        assert ve.validate();
+        try {
+            assert ve.validate();
+        } catch (Exception e) {
+            assert false;
+        }
 
         try {
             cco.setProp1(false);
@@ -36,7 +40,11 @@ public class BoundToClauseTest {
 
         cco.setProp2(null);
 
-        assert ve.validate();
+        try {
+            assert ve.validate();
+        } catch (Exception e) {
+            assert false;
+        }
     }
 
     @Test
@@ -45,7 +53,11 @@ public class BoundToClauseTest {
 
         oto.setProp1("ciao");
 
-        new ValidateEvaluator<>(oto).validate();
+        try {
+            new ValidateEvaluator<>(oto).validate();
+        } catch (Exception e) {
+            assert  false;
+        }
     }
 
     /* NEGATIVE TEST */

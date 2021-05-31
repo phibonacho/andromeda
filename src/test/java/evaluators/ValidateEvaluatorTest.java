@@ -30,8 +30,11 @@ public class ValidateEvaluatorTest {
         ValidateEvaluator<NestedObject> ve = new ValidateEvaluator<>(no).onlyContexts("ctx1");
         no.setProp("this is mandatory");
 
-        assert ve.validate();
-
+        try {
+            assert ve.validate();
+        } catch (Exception e) {
+            assert false;
+        }
         SimpleObject so = new SimpleObject();
         no.setSo(so);
         try {
@@ -42,17 +45,23 @@ public class ValidateEvaluatorTest {
 
         so.setProp("is mandatory also here");
 
-        assert ve.validate();
+        try {
+            assert ve.validate();
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            e.printStackTrace();
+            assert false;
+        }
     }
 
     @Test
-    public void NumericConstraint() {
+    public void NumericConstraint() throws Exception{
         SONumeric son = new SONumeric();
         assert new ValidateEvaluator<>(son).validate(); // primitives types do not require to be instantiated.
     }
 
     @Test
-    public void PositiveNumericConstraint() {
+    public void PositiveNumericConstraint() throws Exception{
         SONPositive sonp = new SONPositive();
         sonp.setProp(1); // primitive types are initialized to 0.
         assert new ValidateEvaluator<>(sonp).validate(); // primitives types do not require to be instantiated.

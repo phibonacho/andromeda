@@ -66,7 +66,7 @@ public class RequiresClauseTest {
 
     @Test
     /* when a context is ignored it must maintain its clausole except mandatory one*/
-    public void ignorableMaintainRequirements() {
+    public void ignorableMaintainRequirements() throws Exception {
         CascadeRequirementsObject cro = new CascadeRequirementsObject();
         ValidateEvaluator<CascadeRequirementsObject> evaluator = new ValidateEvaluator<>(cro)
                 .onlyContexts("ctx1") // this avoid ctx2 from being validated
@@ -93,23 +93,6 @@ public class RequiresClauseTest {
             assert new ValidateEvaluator<>(fro).validate();
         } catch (Exception e) {
             assert e instanceof RequirementsException;
-            return;
-        }
-        assert false;
-    }
-
-    /**
-     * If a node n1 require a second one n2, n2 cannot have n1 as its own dependency
-     */
-    @Test
-    public void cyclicRequirementsFails() {
-        try {
-            CyclicRequirementsObject cro = new CyclicRequirementsObject();
-            cro.setProp("require prop1");
-            cro.setProp1("require prop");
-            assert new ValidateEvaluator<>(cro).validate();
-        } catch (Exception e){
-            assert e instanceof CyclicRequirementException;
             return;
         }
         assert false;

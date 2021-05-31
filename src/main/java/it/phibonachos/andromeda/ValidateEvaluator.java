@@ -1,14 +1,11 @@
 package it.phibonachos.andromeda;
 
 import it.phibonachos.andromeda.exception.*;
-import it.phibonachos.andromeda.types.Constraint;
 import it.phibonachos.ponos.AbstractEvaluator;
 import it.phibonachos.ponos.converters.Converter;
-import it.phibonachos.utils.FunctionalUtils;
 import it.phibonachos.utils.FunctionalWrapper;
 import org.apache.commons.lang3.ArrayUtils;
 
-import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.BinaryOperator;
@@ -19,7 +16,6 @@ import java.util.stream.Stream;
 
 public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean, Validate, InvalidFieldException> implements Validator {
     final private Map<String, ValidationState> av;
-    final private Map<String, Object> cache;
     private Set<Validate.Ignore> ignoreList;
     private Set<String> contexts, ignoreContexts;
 
@@ -29,7 +25,6 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         super(t);
         this.annotationClass = Validate.class;
         av = new HashMap<>();
-        cache = new HashMap<>();
         ignoreList = new HashSet<>();
         contexts = new HashSet<>();
         ignoreContexts = new HashSet<>();
@@ -62,7 +57,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         return this;
     }
 
-    public Boolean validate() {
+    public Boolean validate() throws Exception {
         av.forEach((key, value) -> av.put(key, ValidationState.NOT_YET_EVALUATED)); // reset keys in case of reuse, prevent fail on cascade requirements
         cache.clear(); // clear cache in case of reuse
         return super.evaluate();
@@ -83,29 +78,6 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         return Comparator.comparing((Method m) -> !getMainAnnotation(m).mandatory())
                 .thenComparingInt(m -> getMainAnnotation(m).boundTo().length)
                 .thenComparingInt(m -> getMainAnnotation(m).requires().length);
-    }
-
-//    @Override
-    protected Function<Method, Boolean> evaluateAlgorithm() {
-        return null;//invokeOnNull(m -> !validateMethod(m) || (checkRequirements(m) && checkConflicts(m)), this::validateAlternatives);
-    }
-
-    /**
-     * <p>Validate method with a generic validate interface<p/>
-     *
-     *
-     * @param v Annotation carrying all the validation information
-     * @param method target method to evaluate
-     * @return true if method return a valid value
-     * @throws Exception if not valid
-     */
-    protected Boolean evaluateMethod(Validate v, Method method) throws Exception {
-        Constraint validator = Converter.create(v.with());
-
-        validator.setContext(contexts);
-        validator.setIgnoreContext(ignoreContexts);
-
-        return validator.evaluate(ArrayUtils.addAll(new Object[]{fetchValue(method)}, fetchValues(v.boundTo())));
     }
 
     /**
@@ -167,186 +139,86 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         return Optional.ofNullable(av.get(method.getName())).orElse(ValidationState.NOT_YET_EVALUATED);
     }
 
-    /**
-     * <p>Short hand for {@link #evaluateMethod(Validate, Method)} uses method own validate annotation</p>
-     */
-    private Boolean validateMethod(Method method) throws Exception {
-        if (check(method) == ValidationState.VALID)
-            return true;
-        if (check(method) == ValidationState.NOT_YET_EVALUATED)
-            av.put(method.getName(), ValidationState.ON_EVALUATION);
-        return !evaluateMethod(getMainAnnotation(method), method) || (checkRequirements(method) && checkConflicts(method));
-    }
+    private boolean validateAlternatives(String property, String... alternatives) throws NoAlternativeException {
+        if (isIgnorable(Validate.Ignore.ALTERNATIVES) || alternatives.length == 0)
+            throw new InvalidFieldException("");
 
-    /**
-     * @param method a mandatory method which returned a null value
-     * @return true if at least one of the alternatives is valid or mandatory is ignorable
-     * @throws InvalidFieldException if no non-null alternatives are found or alternatives are ignored
-     */
-    private boolean validateAlternatives(Method method) throws InvalidFieldException {
-        av.put(method.getName(), ValidationState.NOT_SET);
-        Validate ann = getMainAnnotation(method);
-
-        if (isIgnorable(Validate.Ignore.MANDATORY)
-                || !ann.mandatory()
-                || Arrays.stream(ann.context()).anyMatch(ctx -> ignoreContexts.contains(ctx))
-                || (!contexts.isEmpty() && Arrays.stream(ann.context()).noneMatch(ctx -> contexts.contains(ctx))))
-            return true;
-
-        if (isIgnorable(Validate.Ignore.ALTERNATIVES) || ann.alternatives().length == 0)
-            throw new InvalidFieldException(method);
-
-        return validateAlternatives(method, ann);
-    }
-
-    private boolean validateAlternatives(String... alternatives) throws NoAlternativeException {
-        if(alternatives.length > 0 && Arrays.stream(fetchValues(alternatives)).anyMatch(Objects::isNull))
-           throw new NoAlternativeException(Arrays.stream(alternatives).reduce("", (acc, val) -> acc + ", " + val));
-        return true;
-    }
-
-    /**
-     * <p>Retrieve conflictual methods with one passed as argument</p>
-     *
-     * @param m method with possible conflicts
-     * @return true if no conflicts found
-     * @throws ConflictFieldException if conflicts are found
-     */
-    private Boolean checkConflicts(Method m) throws ConflictFieldException {
-        Validate ann = getMainAnnotation(m);
-        if (!isIgnorable(Validate.Ignore.CONFLICTS)
-                && List.of(ann.conflicts())
-                .stream()
-                .map(FunctionalUtils.tryCatch(mName -> new PropertyDescriptor(mName, this.t.getClass()).getReadMethod()))
-                .map(invokeOnNull(method -> validateChildMethod(ann, method), () -> false))
-                .filter(valid -> valid)
-                .findFirst().orElse(false)) throw new ConflictFieldException(m, List.of(ann.conflicts()));
-        av.put(m.getName(), ValidationState.VALID);
-        return true;
-    }
-
-    private boolean checkConflicts(String ...conflicts) {
-        if(Arrays.stream(fetchValues(conflicts))
-                .allMatch(Objects::isNull))
-            throw new ConflictFieldException(Arrays.stream(conflicts).reduce((acc, val) -> acc + ", " + val) + " are conflictual");
+        if(Arrays.stream(fetchValues(alternatives)).allMatch(Objects::isNull))
+            throw new NoAlternativeException(property, List.of(alternatives));
 
         return true;
     }
 
-    /**
-     * <p>Requirements must be met by parent mandatory annotations and child annotation of a mandatory parent</p>
-     *
-     * @param method with requirements to satisfy
-     * @return true if all requirements are met
-     * @throws RequirementsException if some requirements are not met
-     */
-    private Boolean checkRequirements(Method method) throws RequirementsException, InvalidFieldException {
-        if (isIgnorable(Validate.Ignore.REQUIREMENTS)) // if method already validated return true
-            return true;
+    private boolean checkConflicts(String propertyName, boolean skipWhenUnset, String ...conflicts) {
+        if(!(av.get(propertyName) == ValidationState.NOT_SET && skipWhenUnset)
+        && conflicts.length > 0 && Arrays.stream(fetchValues(conflicts))
+                .noneMatch(Objects::isNull))
+            throw new ConflictFieldException(propertyName, List.of(conflicts));
 
-        Validate ann = getMainAnnotation(method);
-        av.put(method.getName(), ValidationState.ON_EVALUATION);
-
-        // check requirements for field
-        if (List.of(ann.requires())
-                .stream()
-                // create a stream of require methods (not null)
-                .map(FunctionalUtils.tryCatch(mName -> new PropertyDescriptor(mName, this.t.getClass()).getReadMethod()))
-                // try to validate methods with their own annotation
-                .map(invokeOnNull(m -> !validateChildMethod(ann, m) || checkChildRequirements(m) && checkChildConflicts(m), this::validateChildAlternatives))
-                .filter(valid -> !valid)
-                .findFirst().orElse(true)) return true;
-        throw new RequirementsException(method, List.of(ann.requires()));
+        return true;
     }
 
-    // check props are instatiated and load in cache
-    private Boolean checkRequirements(String ...requiredProperties) {
-        if(requiredProperties.length > 0 && Arrays.stream(fetchValues(requiredProperties))
+    // check props are instantiated and load in cache
+    private Boolean checkRequirements(String propertyName, boolean skipWhenUnset, String ...requiredProperties) {
+        if(!(av.get(propertyName) == ValidationState.NOT_SET && skipWhenUnset)
+                && requiredProperties.length > 0 && Arrays.stream(fetchValues(requiredProperties))
                 .anyMatch(Objects::isNull))
-            throw new RequirementsException(Arrays.stream(requiredProperties).reduce((acc,val) -> acc + ", " + val) + " are required");
+            throw new RequirementsException(Arrays.stream(requiredProperties).reduce((acc,val) -> acc + ", " + val).orElse("") + " are required");
 
         return true;
-    }
-
-    /**
-     * <p>{@link #evaluateMethod(Validate, Method)} wrapper but use a fallback annotation if not annotated</p>
-     */
-    private Boolean validateChildMethod(Validate v, Method method) throws Exception {
-        return isAssessable(method.getName()) || evaluateMethod(Optional.ofNullable(getMainAnnotation(method)).orElse(v), method);
-    }
-
-    private boolean validateChildAlternatives(Method method) throws InvalidFieldException {
-        if (check(method) == ValidationState.VALID) // if method already validated return true
-            return true;
-
-        Validate ann = getMainAnnotation(method);
-
-        if (isIgnorable(Validate.Ignore.ALTERNATIVES))
-            throw new InvalidFieldException(method);
-
-        return validateAlternatives(method, ann);
-    }
-
-    /**
-     * <p>Shorthand for {@link #checkConflicts(Method)}, in most case, required or conflictual object are not annotated</p>
-     * this means that they have no specific conflicts or have same as parent
-     */
-    private Boolean checkChildConflicts(Method method) throws RequirementsException {
-        return getMainAnnotation(method) == null || checkConflicts(method);
-    }
-
-    /**
-     * <p>Shorthand for {@link #checkRequirements(Method)}, in most case, required or conflictual object are not annotated</p>
-     * this means that they have no specific requirements or have same as parent
-     */
-    private Boolean checkChildRequirements(Method method) throws RequirementsException {
-        if (av.containsKey(method.getName()) && av.get(method.getName()).equals(ValidationState.ON_EVALUATION))
-            throw new CyclicRequirementException("Detected cyclic dependency with " + method.getName());
-        return getMainAnnotation(method) == null || checkRequirements(method);
     }
 
     private boolean isIgnorable(Validate.Ignore ignorable) {
         return ignoreList.contains(ignorable);
     }
 
-    /**
-     * @return true if the property hasn't been already evaluated or it is valid
-     */
-    private boolean isAssessable(String propertyName) {
-        return av.containsKey(propertyName) && !(av.get(propertyName).equals(ValidationState.NOT_SET) || av.get(propertyName).equals(ValidationState.ON_EVALUATION));
-    }
-
     private String displayName(String method) {
         return Stream.of(method).map(name -> name.replaceAll("^(get|is|has)", "")).map(name -> name.substring(0, 1).toLowerCase().concat(name.substring(1))).collect(Collectors.joining());
     }
 
-    private boolean validateAlternatives(Method method, Validate ann) {
-        return Arrays.stream(ann.alternatives())
-                .map(FunctionalUtils.tryCatch(mName -> new PropertyDescriptor(mName, this.t.getClass()).getReadMethod()))
-                .map(invokeOnNull(
-                        m -> !validateChildMethod(ann, m) || (checkChildRequirements(m) && checkChildConflicts(m)),
-                        m -> false))
-                // lazy find first valid
-                .filter(valid -> valid)
-                .findFirst().orElseThrow(() -> new NoAlternativeException(method, List.of(ann.alternatives())));
+    private boolean auxProcess(Validate v, Converter<Boolean> converter, Object prop, Method target, boolean skipWhenUnset) throws Exception {
+        try {
+            return converter.evaluate(ArrayUtils.addAll(new Object[]{prop}, fetchValues(v.boundTo())));
+        } catch (NullPointerException npe) {
+            av.put(target.getName(), ValidationState.NOT_SET);
+
+            if (skipWhenUnset)
+                return true;
+
+            if (isIgnorable(Validate.Ignore.ALTERNATIVES) || v.alternatives().length == 0)
+                throw new InvalidFieldException(target.getName(), List.of(v.alternatives()));
+
+            return validateAlternatives(target.getName(), v.alternatives());
+        }
     }
 
     @Override
     protected Boolean process(Validate v, Converter<Boolean> converter, Object prop, Method target) throws Exception {
         av.put(target.getName(), ValidationState.ON_EVALUATION);
         try {
-            return !super.process(v, converter, prop, target) || (checkRequirements(v.requires()) && checkConflicts(v.conflicts()));
-        } catch (NullPointerException npe) { // check alternatives
-            System.out.println("validating alternatives");
-            try {
-                return validateAlternatives(v.alternatives());
-            } catch (NoAlternativeException nae) {
-                throw new NoAlternativeException(target, Arrays.asList(v.alternatives().clone()));
-            }
+            // An unset property should be considered valid whether:
+            // the property is not set
+            // the property belong to an ignorable context
+            // the property do not belong to an evaluated context
+            // the mandatory clause is ignored
+            boolean swu = !v.mandatory()
+                    || Arrays.stream(v.context()).anyMatch(ctx -> ignoreContexts.contains(ctx))
+                    || (!this.contexts.isEmpty()
+                    && Arrays.stream(v.context()).noneMatch(ctx -> this.contexts.contains(ctx)))
+                    || isIgnorable(Validate.Ignore.MANDATORY);
+
+            // check property against its validator
+            boolean valid = !auxProcess(v, converter, prop, target, swu)
+                    || (checkRequirements(target.getName(), swu, v.requires()) && checkConflicts(target.getName(), swu, v.conflicts()));
+
+            av.put(target.getName(), ValidationState.VALID);
+
+            return valid;
+
         } catch (InvalidCollectionFieldException e) {
             throw new InvalidFieldException("Collection " + displayName(target.getName()) + "[] : " + e.getMessage());
         } catch (InvalidPropertiesFormatException | InvalidFieldException | InvalidNestedFieldException e) {
-            throw new InvalidFieldException(displayName(target.getName()) + e.getMessage());
+            throw new InvalidFieldException(e.getMessage());
         } catch (ConflictFieldException e) {
             throw new ConflictFieldException(e.getMessage());
         } catch (CyclicRequirementException e) {

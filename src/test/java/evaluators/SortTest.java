@@ -20,6 +20,7 @@ public class SortTest {
         try {
             assert validator.validate();
         } catch (Exception e) {
+            System.err.println(e.getMessage());
             assert e.getMessage().equals("prop1 cannot be null");
         }
 
@@ -45,6 +46,7 @@ public class SortTest {
 
         // validations with bounds and requirements are validated at last
         try {
+            System.err.println(test.getProp1());
             assert validator.validate();
         } catch (Exception e) {
             assert e.getMessage().equals("prop4 cannot be null");

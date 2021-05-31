@@ -1,7 +1,7 @@
 package it.phibonachos.andromeda;
 
 public interface Validator {
-    Boolean validate();
+    Boolean validate() throws Exception;
 
     Validator ignoreClauses(Validate.Ignore ...clauses);
 
