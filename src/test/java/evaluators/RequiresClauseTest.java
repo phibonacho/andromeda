@@ -105,11 +105,15 @@ public class RequiresClauseTest {
     public void cascadeRequirementsFails() {
         CascadeRequirementsObject cro = new CascadeRequirementsObject();
         ValidateEvaluator<CascadeRequirementsObject> evaluator = new ValidateEvaluator<>(cro);
+        evaluator.ignoreContexts("ctx2"); // or else req1 is considered mandatory
         cro.setProp("this is a mandatory property");
 
         try {
             assert evaluator.validate();
         } catch (Exception e) {
+            System.err.println(e.getMessage());
+            System.err.println(e.getClass().getSimpleName());
+            e.printStackTrace();
             assert e instanceof RequirementsException;
         }
 

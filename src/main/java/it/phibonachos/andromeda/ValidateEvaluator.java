@@ -3,6 +3,7 @@ package it.phibonachos.andromeda;
 import it.phibonachos.andromeda.exception.*;
 import it.phibonachos.ponos.AbstractEvaluator;
 import it.phibonachos.ponos.converters.Converter;
+import it.phibonachos.ponos.converters.ConverterException;
 import it.phibonachos.utils.FunctionalWrapper;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -163,7 +164,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         if(!(av.get(propertyName) == ValidationState.NOT_SET && skipWhenUnset)
                 && requiredProperties.length > 0 && Arrays.stream(fetchValues(requiredProperties))
                 .anyMatch(Objects::isNull))
-            throw new RequirementsException(Arrays.stream(requiredProperties).reduce((acc,val) -> acc + ", " + val).orElse("") + " are required");
+            throw new RequirementsException(propertyName, List.of(requiredProperties));
 
         return true;
     }
@@ -217,16 +218,8 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
 
         } catch (InvalidCollectionFieldException e) {
             throw new InvalidFieldException("Collection " + displayName(target.getName()) + "[] : " + e.getMessage());
-        } catch (InvalidPropertiesFormatException | InvalidFieldException | InvalidNestedFieldException e) {
-            throw new InvalidFieldException(e.getMessage());
-        } catch (ConflictFieldException e) {
-            throw new ConflictFieldException(e.getMessage());
-        } catch (CyclicRequirementException e) {
-            throw new CyclicRequirementException(e.getMessage());
-        } catch (RequirementsException e) {
-            throw new RequirementsException(displayName(target.getName()) + " : " + e.getMessage());
-        } catch (NoAlternativeException nae) {
-            throw new NoAlternativeException(displayName(target.getName()) + " : " + nae.getMessage());
+        } catch (InvalidPropertiesFormatException | ConverterException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
