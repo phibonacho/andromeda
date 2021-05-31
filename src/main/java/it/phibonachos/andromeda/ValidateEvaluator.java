@@ -4,14 +4,11 @@ import it.phibonachos.andromeda.exception.*;
 import it.phibonachos.ponos.AbstractEvaluator;
 import it.phibonachos.ponos.converters.Converter;
 import it.phibonachos.ponos.converters.ConverterException;
-import it.phibonachos.utils.FunctionalWrapper;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.BinaryOperator;
-import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -81,65 +78,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
                 .thenComparingInt(m -> getMainAnnotation(m).requires().length);
     }
 
-    /**
-     * <p>Extends {@link AbstractEvaluator#invokeOnNull}, providing handler for andromeda's custom Exceptions</p>
-     *
-     * @param throwingFunction a function capable of throwing exceptions
-     * @param fallback         a function to call in case of failure
-     * @param <R>              a return type
-     * @return the result of the evaluation of throwing function or fallback
-     * @throws InvalidFieldException if evaluation non-null but invalid
-     */
-    @Override
-    protected <R> Function<Method, R> invokeOnNull(FunctionalWrapper<Method, R, Exception> throwingFunction, Supplier<R> fallback) throws InvalidFieldException {
-        return i -> {
-            try {
-                return throwingFunction.accept(i);
-            } catch (NullPointerException npe) {
-                return fallback.get();
-            } catch (InvalidCollectionFieldException e) {
-                throw new InvalidFieldException("Collection " + displayName(i.getName()) + "[] : " + e.getMessage());
-            } catch (InvalidPropertiesFormatException | InvalidFieldException | InvalidNestedFieldException e) {
-                throw new InvalidFieldException(displayName(i.getName()) + e.getMessage());
-            } catch (RequirementsException | NoAlternativeException e) {
-                throw new RequirementsException(displayName(i.getName()) + " requires " + e.getMessage());
-            } catch (IllegalArgumentException e) {
-                throw new AnnotationException(e.getMessage() + ". Have you annotated your field correctly?");
-            } catch (Exception e) {
-                throw new RuntimeException(e.getMessage());
-            }
-        };
-    }
-
-    @Override
-    protected <R> Function<Method, R> invokeOnNull(FunctionalWrapper<Method, R, Exception> throwingFunction, Function<Method, R> fallback) throws InvalidFieldException {
-        return i -> {
-            try {
-                return throwingFunction.accept(i);
-            } catch (NullPointerException npe) {
-                return fallback.apply(i);
-            } catch (InvalidCollectionFieldException e) {
-                throw new InvalidFieldException("Collection " + displayName(i.getName()) + "[] : " + e.getMessage());
-            } catch (InvalidPropertiesFormatException | InvalidFieldException | InvalidNestedFieldException e) {
-                throw new InvalidFieldException(displayName(i.getName()) + e.getMessage());
-            } catch (ConflictFieldException e) {
-                throw new ConflictFieldException(e.getMessage());
-            } catch (CyclicRequirementException e) {
-                throw new CyclicRequirementException(e.getMessage());
-            } catch (RequirementsException | NoAlternativeException e) {
-                throw new RequirementsException(displayName(i.getName()) + " requires " + e.getMessage());
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        };
-    }
-
     /* ----------------- PRIVATE METHODS ----------------- */
-
-    private ValidationState check(Method method) throws InvalidFieldException {
-        return Optional.ofNullable(av.get(method.getName())).orElse(ValidationState.NOT_YET_EVALUATED);
-    }
-
     private boolean validateAlternatives(String property, String... alternatives) throws NoAlternativeException {
         if (isIgnorable(Validate.Ignore.ALTERNATIVES) || alternatives.length == 0)
             throw new InvalidFieldException("");

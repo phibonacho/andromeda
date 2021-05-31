@@ -111,9 +111,6 @@ public class RequiresClauseTest {
         try {
             assert evaluator.validate();
         } catch (Exception e) {
-            System.err.println(e.getMessage());
-            System.err.println(e.getClass().getSimpleName());
-            e.printStackTrace();
             assert e instanceof RequirementsException;
         }
 
