@@ -48,8 +48,6 @@ public class ValidateEvaluatorTest {
         try {
             assert ve.validate();
         } catch (Exception e) {
-            System.err.println(e.getMessage());
-            e.printStackTrace();
             assert false;
         }
     }
