@@ -1,6 +1,6 @@
 package it.phibonachos.andromeda.types;
 
-public abstract class SingleValueConstraint<T> extends MultiValueConstraint {
+public abstract class SoloConstraint<T> extends MultiConstraint {
 
     @Override
     @SuppressWarnings("unchecked")

@@ -2,19 +2,19 @@ package evaluators.validate_evaluator_classes;
 
 import evaluators.constraints.CompoundConstraint;
 import it.phibonachos.andromeda.Validate;
-import it.phibonachos.andromeda.types.mono.StringValue;
+import it.phibonachos.andromeda.types.mono.StringConstraint;
 
 public class CompoundConstraintObject {
-    private String prop;
+    private java.lang.String prop;
     private boolean prop1;
-    private String prop2;
+    private java.lang.String prop2;
 
-    @Validate(with = StringValue.class, mandatory = true)
-    public String getProp() {
+    @Validate(with = StringConstraint.class, mandatory = true)
+    public java.lang.String getProp() {
         return prop;
     }
 
-    public void setProp(String prop) {
+    public void setProp(java.lang.String prop) {
         this.prop = prop;
     }
 
@@ -27,12 +27,12 @@ public class CompoundConstraintObject {
         this.prop1 = prop1;
     }
 
-    @Validate(with = StringValue.class)
-    public String getProp2() {
+    @Validate(with = StringConstraint.class)
+    public java.lang.String getProp2() {
         return prop2;
     }
 
-    public void setProp2(String prop2) {
+    public void setProp2(java.lang.String prop2) {
         this.prop2 = prop2;
     }
 }

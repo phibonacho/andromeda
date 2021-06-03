@@ -1,6 +1,6 @@
 package it.phibonachos.andromeda.types;
 
-public abstract class CoupleConstraint<F,S> extends MultiValueConstraint {
+public abstract class DuetConstraint<F,S> extends MultiConstraint {
 
     @Override
     @SuppressWarnings("unchecked")

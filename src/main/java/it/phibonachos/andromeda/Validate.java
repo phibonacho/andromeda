@@ -1,7 +1,8 @@
 package it.phibonachos.andromeda;
 
-import it.phibonachos.andromeda.types.MultiValueConstraint;
-import it.phibonachos.andromeda.types.mono.NotNullValue;
+import it.phibonachos.andromeda.types.DuetConstraint;
+import it.phibonachos.andromeda.types.MultiConstraint;
+import it.phibonachos.andromeda.types.mono.NotNull;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -19,11 +20,11 @@ public @interface Validate {
 
     /**
      * <p>With clause states which class must be use in order to validate annotated property.
-     * All validation classes extends abstract class {@link MultiValueConstraint}, and expose a validate(T target), which wraps validation algorithm.</p>
+     * All validation classes extends abstract class {@link MultiConstraint}, and expose a validate(T target), which wraps validation algorithm.</p>
      *
      * @return a validator object
      */
-    Class<? extends MultiValueConstraint> with() default NotNullValue.class;
+    Class<? extends MultiConstraint> with() default NotNull.class;
 
     /**
      * <p>Mandatory clause states if annotated property can be whether nullable or not.
@@ -58,7 +59,7 @@ public @interface Validate {
 
     /**
      * <p>BoundTo clause defined which properties are closely connected to the annotated property.
-     * During evaluation boundTo properties values will be used in order to emit a verdict, properties annotated with a boundTo clause, must use a validation class which extends {@link MultiValueConstraint} or at least {@link it.phibonachos.andromeda.types.CoupleConstraint}.</p>
+     * During evaluation boundTo properties values will be used in order to emit a verdict, properties annotated with a boundTo clause, must use a validation class which extends {@link MultiConstraint} or at least {@link DuetConstraint}.</p>
      *
      * @return a set of properties bounded to the validation of current method
      */

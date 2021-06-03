@@ -1,10 +1,10 @@
 package it.phibonachos.andromeda.types.collections;
 
-import it.phibonachos.andromeda.types.SingleValueConstraint;
+import it.phibonachos.andromeda.types.SoloConstraint;
 
 import java.util.Collection;
 
-public class BlandCollectionType<T, C extends Collection<T>> extends SingleValueConstraint<C> {
+public class BlandCollectionType<T, C extends Collection<T>> extends SoloConstraint<C> {
 
     @Override
     public Boolean validate(C guard) {

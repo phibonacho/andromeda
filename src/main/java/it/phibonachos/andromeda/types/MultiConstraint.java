@@ -1,15 +1,15 @@
 package it.phibonachos.andromeda.types;
 
+import it.phibonachos.andromeda.exception.InvalidFieldException;
 import it.phibonachos.ponos.converters.MultiValueConverter;
 
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.Set;
 
 /**
  * Defines a {@link Constraint} which elaborate boolean verdicts, it can be used to validate a single or multiple properties.
  */
-public abstract class MultiValueConstraint extends MultiValueConverter<Boolean> implements Constraint {
+public abstract class MultiConstraint extends MultiValueConverter<Boolean> implements Constraint {
     protected String[] context, ignoreContext;
 
     @Override
@@ -17,10 +17,10 @@ public abstract class MultiValueConstraint extends MultiValueConverter<Boolean> 
         if(Objects.isNull(props[0]))
             throw new NullPointerException();
 
-        if(Arrays.stream(props).allMatch(Objects::isNull))
-            throw new RuntimeException("All bounded properties are not instantiated");
+        if(!super.evaluate(props))
+            throw new InvalidFieldException(this.message());
 
-        return super.evaluate(props);
+        return true;
     }
 
     @Override

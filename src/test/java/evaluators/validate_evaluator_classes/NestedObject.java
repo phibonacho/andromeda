@@ -2,20 +2,20 @@ package evaluators.validate_evaluator_classes;
 
 import it.phibonachos.andromeda.Validate;
 import it.phibonachos.andromeda.types.mono.NestedVal;
-import it.phibonachos.andromeda.types.mono.StringValue;
+import it.phibonachos.andromeda.types.mono.StringConstraint;
 
 public class NestedObject {
-    private String prop;
+    private java.lang.String prop;
     private SimpleObject so;
 
-    @Validate(with = StringValue.class, mandatory = true)
-    public String getProp() {
+    @Validate(with = StringConstraint.class, mandatory = true)
+    public java.lang.String getProp() {
         return prop;
     }
 
 
 
-    public void setProp(String prop) {
+    public void setProp(java.lang.String prop) {
         this.prop = prop;
     }
 

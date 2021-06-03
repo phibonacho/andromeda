@@ -1,27 +1,27 @@
 package evaluators.validate_evaluator_classes;
 
 import it.phibonachos.andromeda.Validate;
-import it.phibonachos.andromeda.types.mono.StringValue;
+import it.phibonachos.andromeda.types.mono.StringConstraint;
 
 public class SimpleObject {
-    private String prop;
-    private String prop2;
+    private java.lang.String prop;
+    private java.lang.String prop2;
 
-    @Validate(with = StringValue.class, mandatory = true, context = "ctx1")
-    public String getProp() {
+    @Validate(with = StringConstraint.class, mandatory = true, context = "ctx1")
+    public java.lang.String getProp() {
         return prop;
     }
 
-    public void setProp(String prop) {
+    public void setProp(java.lang.String prop) {
         this.prop = prop;
     }
 
-    @Validate(with = StringValue.class, mandatory = true, context = "ctx2")
-    public String getProp2() {
+    @Validate(with = StringConstraint.class, mandatory = true, context = "ctx2")
+    public java.lang.String getProp2() {
         return prop2;
     }
 
-    public void setProp2(String prop2) {
+    public void setProp2(java.lang.String prop2) {
         this.prop2 = prop2;
     }
 }

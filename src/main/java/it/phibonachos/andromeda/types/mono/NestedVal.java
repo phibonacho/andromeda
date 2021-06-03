@@ -1,10 +1,7 @@
 package it.phibonachos.andromeda.types.mono;
 
 import it.phibonachos.andromeda.ValidateEvaluator;
-import it.phibonachos.andromeda.exception.InvalidFieldException;
-import it.phibonachos.andromeda.exception.InvalidNestedFieldException;
-import it.phibonachos.andromeda.types.SingleValueConstraint;
-import it.phibonachos.ponos.converters.ConverterException;
+import it.phibonachos.andromeda.types.SoloConstraint;
 
 /**
  * <p>This class provides a handful way to propagate validation on nested objects.
@@ -12,7 +9,7 @@ import it.phibonachos.ponos.converters.ConverterException;
  *
  * @param <T> Generic class to be validated
  */
-public class NestedVal<T> extends SingleValueConstraint<T> {
+public class NestedVal<T> extends SoloConstraint<T> {
 
     @Override
     public Boolean validate(T guard) throws Exception {

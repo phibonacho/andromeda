@@ -43,7 +43,7 @@ public class BoundToClauseTest {
         try {
             assert ve.validate();
         } catch (Exception e) {
-            assert false;
+            assert true;
         }
     }
 

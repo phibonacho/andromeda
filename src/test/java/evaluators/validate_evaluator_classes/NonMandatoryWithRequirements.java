@@ -1,27 +1,27 @@
 package evaluators.validate_evaluator_classes;
 
 import it.phibonachos.andromeda.Validate;
-import it.phibonachos.andromeda.types.mono.StringValue;
+import it.phibonachos.andromeda.types.mono.StringConstraint;
 
 public class NonMandatoryWithRequirements {
-    private String prop;
-    private String requireProp;
+    private java.lang.String prop;
+    private java.lang.String requireProp;
 
-    @Validate(with = StringValue.class, requires = "requireProp")
-    public String getProp() {
+    @Validate(with = StringConstraint.class, requires = "requireProp")
+    public java.lang.String getProp() {
         return prop;
     }
 
-    public void setProp(String prop) {
+    public void setProp(java.lang.String prop) {
         this.prop = prop;
     }
 
-    @Validate(with = StringValue.class)
-    public String getRequireProp() {
+    @Validate(with = StringConstraint.class)
+    public java.lang.String getRequireProp() {
         return requireProp;
     }
 
-    public void setRequireProp(String requireProp) {
+    public void setRequireProp(java.lang.String requireProp) {
         this.requireProp = requireProp;
     }
 }

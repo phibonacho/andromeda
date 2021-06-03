@@ -1,27 +1,27 @@
 package evaluators.validate_evaluator_classes;
 
 import it.phibonachos.andromeda.Validate;
-import it.phibonachos.andromeda.types.mono.StringValue;
+import it.phibonachos.andromeda.types.mono.StringConstraint;
 
 public class ConflictsObject {
-    private String prop;
-    private String conflictProp;
+    private java.lang.String prop;
+    private java.lang.String conflictProp;
 
-    @Validate(with = StringValue.class, conflicts = "conflictProp")
-    public String getProp() {
+    @Validate(with = StringConstraint.class, conflicts = "conflictProp")
+    public java.lang.String getProp() {
         return prop;
     }
 
-    public void setProp(String prop) {
+    public void setProp(java.lang.String prop) {
         this.prop = prop;
     }
 
-    @Validate(with = StringValue.class, conflicts = "prop")
-    public String getConflictProp() {
+    @Validate(with = StringConstraint.class, conflicts = "prop")
+    public java.lang.String getConflictProp() {
         return conflictProp;
     }
 
-    public void setConflictProp(String conflictProp) {
+    public void setConflictProp(java.lang.String conflictProp) {
         this.conflictProp = conflictProp;
     }
 }

@@ -1,7 +1,7 @@
 package it.phibonachos.processor;
 
 import it.phibonachos.andromeda.Validate;
-import it.phibonachos.andromeda.types.MultiValueConstraint;
+import it.phibonachos.andromeda.types.MultiConstraint;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
@@ -28,7 +28,7 @@ public class ValidateProcessor extends AbstractProcessor {
             }
 
             Validate validate = e.getAnnotation(Validate.class);
-            Class<? extends MultiValueConstraint> mvc = validate.with();
+            Class<? extends MultiConstraint> mvc = validate.with();
             List<Method> validationMethod = Arrays.stream(mvc.getMethods()).filter(method -> method.getName().equals("validate")).collect(Collectors.toList());
 
             if(validationMethod.size() < 1) {
