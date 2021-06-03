@@ -1,7 +1,7 @@
-package evaluators;
+package evaluators.validate.clauses;
 
 
-import evaluators.validate_evaluator_classes.*;
+import evaluators.targets.*;
 import it.phibonachos.andromeda.ValidateEvaluator;
 import it.phibonachos.andromeda.exception.*;
 import org.junit.Test;

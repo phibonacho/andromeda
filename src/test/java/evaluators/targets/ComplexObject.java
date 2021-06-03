@@ -1,4 +1,4 @@
-package evaluators.validate_evaluator_classes;
+package evaluators.targets;
 
 import evaluators.constraints.C2Constraint;
 import evaluators.constraints.CompoundConstraint;

@@ -1,7 +1,7 @@
 package evaluators;
 
 
-import evaluators.validate_evaluator_classes.*;
+import evaluators.targets.*;
 import it.phibonachos.andromeda.ValidateEvaluator;
 import it.phibonachos.andromeda.exception.InvalidFieldException;
 import org.junit.Test;

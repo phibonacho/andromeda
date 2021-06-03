@@ -1,4 +1,6 @@
-package it.phibonachos.andromeda.types;
+package it.phibonachos.andromeda.types.mono;
+
+import it.phibonachos.andromeda.types.SoloConstraint;
 
 public class BooleanConstraint extends SoloConstraint<Boolean> {
 

@@ -1,4 +1,4 @@
-package evaluators.validate_evaluator_classes;
+package evaluators.targets;
 
 import evaluators.constraints.C8Constraint;
 import it.phibonachos.andromeda.Validate;

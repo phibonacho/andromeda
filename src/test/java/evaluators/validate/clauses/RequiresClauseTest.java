@@ -1,15 +1,12 @@
-package evaluators;
+package evaluators.validate.clauses;
 
 
-import evaluators.validate_evaluator_classes.*;
+import evaluators.targets.*;
 import it.phibonachos.andromeda.ValidateEvaluator;
 import it.phibonachos.andromeda.exception.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @RunWith(JUnit4.class)
 public class RequiresClauseTest {

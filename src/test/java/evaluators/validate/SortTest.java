@@ -1,7 +1,7 @@
-package evaluators;
+package evaluators.validate;
 
 
-import evaluators.validate_evaluator_classes.ComplexObject;
+import evaluators.targets.ComplexObject;
 import it.phibonachos.andromeda.ValidateEvaluator;
 import org.junit.Test;
 import org.junit.runner.RunWith;
