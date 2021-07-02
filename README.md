@@ -1,4 +1,4 @@
-#Andromeda
+# Andromeda
 Constraint validation annotations.
 
 Andromeda is an object validation framework based on [Ponos](https://rollingflamingo.github.io/ponos), it consumes 
@@ -140,9 +140,21 @@ Andromeda relies on Ponos implementation, and so on its Converters system.
 Long story short: a Ponos's ```Converter<T>``` expose a ```T evaluate(Object ...props)``` method, which (guess what), convert given properties to target T type.
 
 In Andromeda the Converter interface is implemented by the MultiValueConstraint object, which handle the properties validation and contexts management.
-All validation classes should extend MultiValueConstraint, or more easily an arity fix Constraint such as [SoloConstraint](#SoloConstraint) or [DuetConstraint](#DuetConstraint).
+All validation classes should extend MultiValueConstraint, or more easily an arity fix Constraint.
 
-###SoloConstraint
+### Arity-fixed Constraints
+Andromeda ships with arity-fixed constraint abstract classes out of the box, an arity fixed utility classes have from 1 to 8 parametric types and expose ```validate(T t, ...)``` method with matching arity.
+Parametric types and arguments respect the properties to be validated positionally.
+
+- SoloConstraint
+- DuetConstraint
+- TripletConstraint
+- QuartetConstraint
+- QuintetConstraint
+- SextetConstraint
+- SeptetConstraint
+- OctetConstaint
+
 SoloConstraint is the one of the eight fixed arity validation classes, and it provides a simple way to define a validation class which must evaluate a single property.
 Imagine you have a String property that must have a capital letter at the beginning, you can define a constraint class as follows:
 
@@ -179,4 +191,3 @@ public class CapitalConstraint extends SoloConstraint<String> {
 
 ```
 
-###DuetConstraint
