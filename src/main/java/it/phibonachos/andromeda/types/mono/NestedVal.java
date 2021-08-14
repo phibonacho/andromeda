@@ -10,12 +10,23 @@ import it.phibonachos.andromeda.types.SoloConstraint;
  * @param <T> Generic class to be validated
  */
 public class NestedVal<T> extends SoloConstraint<T> {
+    private String nestedError = "";
 
     @Override
     public Boolean validate(T guard) throws Exception {
-        return new ValidateEvaluator<>(guard)
-                .onlyContexts(this.context)
-                .ignoreContexts(this.ignoreContext)
-                .validate();
+        try {
+            return new ValidateEvaluator<>(guard)
+                    .onlyContexts(this.context)
+                    .ignoreContexts(this.ignoreContext)
+                    .validate();
+        } catch(Exception e){
+            this.nestedError = e.getMessage();
+            return false;
+        }
+    }
+
+    @Override
+    public String message(){
+        return this.nestedError + "[nested]";
     }
 }

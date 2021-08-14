@@ -1,6 +1,7 @@
 package it.phibonachos.andromeda;
 
 import it.phibonachos.andromeda.exception.*;
+import it.phibonachos.andromeda.types.Constraint;
 import it.phibonachos.ponos.AbstractEvaluator;
 import it.phibonachos.ponos.converters.Converter;
 import it.phibonachos.ponos.converters.ConverterException;
@@ -42,6 +43,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
      * @return a validator who will ignore properties associated to contexts passed as arguments
      */
     public ValidateEvaluator<Target> ignoreContexts(String... ignorable) {
+        if(ignorable != null)
         this.ignoreContexts = Set.of(ignorable);
         return this;
     }
@@ -116,8 +118,10 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         return Stream.of(method).map(name -> name.replaceAll("^(get|is|has)", "")).map(name -> name.substring(0, 1).toLowerCase().concat(name.substring(1))).collect(Collectors.joining());
     }
 
-    private boolean auxProcess(Validate v, Converter<Boolean> converter, Object prop, Method target, boolean skipWhenUnset) throws Exception {
+    private boolean auxProcess(Validate v, Constraint converter, Object prop, Method target, boolean skipWhenUnset) throws Exception {
         try {
+            converter.setContext(this.contexts);
+            converter.setIgnoreContext(this.ignoreContexts);
             return converter.evaluate(ArrayUtils.addAll(new Object[]{prop}, fetchValues(v.boundTo())));
         } catch (NullPointerException npe) {
             av.put(target.getName(), ValidationState.NOT_SET);
@@ -148,7 +152,7 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
                     || isIgnorable(Validate.Ignore.MANDATORY);
 
             // check property against its validator
-            boolean valid = !auxProcess(v, converter, prop, target, swu)
+            boolean valid = !auxProcess(v, (Constraint) converter, prop, target, swu)
                     || (checkRequirements(target.getName(), swu, v.requires()) && checkConflicts(target.getName(), swu, v.conflicts()));
 
             av.put(target.getName(), ValidationState.VALID);

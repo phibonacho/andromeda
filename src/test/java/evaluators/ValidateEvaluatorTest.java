@@ -83,6 +83,8 @@ public class ValidateEvaluatorTest {
             SONPositive sonp = new SONPositive();
             assert new ValidateEvaluator<>(sonp).validate();
         } catch (Exception e) {
+            System.out.println(e.getMessage());
+            System.out.println(e.getClass().getSimpleName());
             assert e instanceof InvalidFieldException;
         }
     }
