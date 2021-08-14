@@ -1,9 +1,7 @@
 package it.phibonachos.andromeda.types.mono;
 
 import it.phibonachos.andromeda.ValidateEvaluator;
-import it.phibonachos.andromeda.exception.InvalidFieldException;
-import it.phibonachos.andromeda.exception.InvalidNestedFieldException;
-import it.phibonachos.andromeda.types.SingleValueConstraint;
+import it.phibonachos.andromeda.types.SoloConstraint;
 
 /**
  * <p>This class provides a handful way to propagate validation on nested objects.
@@ -11,21 +9,24 @@ import it.phibonachos.andromeda.types.SingleValueConstraint;
  *
  * @param <T> Generic class to be validated
  */
-public class NestedVal<T> extends SingleValueConstraint<T> {
+public class NestedVal<T> extends SoloConstraint<T> {
+    private String nestedError = "";
 
     @Override
-    public Boolean validate(T guard) throws InvalidFieldException, InvalidNestedFieldException, NullPointerException {
+    public Boolean validate(T guard) throws Exception {
         try {
             return new ValidateEvaluator<>(guard)
                     .onlyContexts(this.context)
                     .ignoreContexts(this.ignoreContext)
                     .validate();
-        } catch (Exception e) {
-            if(e instanceof InvalidFieldException)
-                throw new InvalidNestedFieldException("." + e.getMessage());
-            else if(e instanceof NullPointerException)
-                throw new InvalidNestedFieldException(" cannot be null.");
-            throw new InvalidNestedFieldException(e.getMessage());
+        } catch(Exception e){
+            this.nestedError = e.getMessage();
+            return false;
         }
+    }
+
+    @Override
+    public String message(){
+        return this.nestedError + "[nested]";
     }
 }

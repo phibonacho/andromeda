@@ -1,6 +1,8 @@
 package it.phibonachos.andromeda.exception;
 
-public class CyclicRequirementException extends RequirementsException {
+import it.phibonachos.ponos.converters.ConverterException;
+
+public class CyclicRequirementException extends ConverterException {
     public CyclicRequirementException(String message) {
         super(message);
     }

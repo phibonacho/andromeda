@@ -1,11 +1,11 @@
 package evaluators.constraints;
 
-import it.phibonachos.andromeda.types.CoupleConstraint;
+import it.phibonachos.andromeda.types.DuetConstraint;
 import org.apache.commons.lang3.StringUtils;
 
-public class CompoundConstraint extends CoupleConstraint<Boolean, String> {
+public class CompoundConstraint extends DuetConstraint<Boolean, String> {
     @Override
-    public Boolean convert(Boolean guard, String boundGuard) {
+    public Boolean validate(Boolean guard, String boundGuard) {
         return guard && !StringUtils.isBlank(boundGuard) || !guard && StringUtils.isBlank(boundGuard);
     }
 

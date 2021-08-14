@@ -1,9 +1,9 @@
 package evaluators;
 
 
-import evaluators.validate_evaluator_classes.*;
+import evaluators.targets.*;
 import it.phibonachos.andromeda.ValidateEvaluator;
-import it.phibonachos.andromeda.exception.*;
+import it.phibonachos.andromeda.exception.InvalidFieldException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -30,8 +30,11 @@ public class ValidateEvaluatorTest {
         ValidateEvaluator<NestedObject> ve = new ValidateEvaluator<>(no).onlyContexts("ctx1");
         no.setProp("this is mandatory");
 
-        assert ve.validate();
-
+        try {
+            assert ve.validate();
+        } catch (Exception e) {
+            assert false;
+        }
         SimpleObject so = new SimpleObject();
         no.setSo(so);
         try {
@@ -42,17 +45,21 @@ public class ValidateEvaluatorTest {
 
         so.setProp("is mandatory also here");
 
-        assert ve.validate();
+        try {
+            assert ve.validate();
+        } catch (Exception e) {
+            assert false;
+        }
     }
 
     @Test
-    public void NumericConstraint() {
+    public void NumericConstraint() throws Exception{
         SONumeric son = new SONumeric();
         assert new ValidateEvaluator<>(son).validate(); // primitives types do not require to be instantiated.
     }
 
     @Test
-    public void PositiveNumericConstraint() {
+    public void PositiveNumericConstraint() throws Exception{
         SONPositive sonp = new SONPositive();
         sonp.setProp(1); // primitive types are initialized to 0.
         assert new ValidateEvaluator<>(sonp).validate(); // primitives types do not require to be instantiated.
@@ -76,6 +83,8 @@ public class ValidateEvaluatorTest {
             SONPositive sonp = new SONPositive();
             assert new ValidateEvaluator<>(sonp).validate();
         } catch (Exception e) {
+            System.out.println(e.getMessage());
+            System.out.println(e.getClass().getSimpleName());
             assert e instanceof InvalidFieldException;
         }
     }
@@ -89,6 +98,11 @@ public class ValidateEvaluatorTest {
         } catch (Exception e) {
             assert e instanceof InvalidFieldException;
         }
+    }
+
+    @Test
+    public void OctetConstraint() {
+
     }
 
 }
