@@ -80,6 +80,21 @@ public class RequiresClauseTest {
         }
     }
 
+    @Test
+    public void boundRequirements() {
+        BoundRequirement br = new BoundRequirement();
+
+        br.setProp("a mandatory prop");
+        br.setBoundProp("another prop with bound validation values");
+        br.setPropWithRequirements("a prop with requirements");
+
+        try {
+            new ValidateEvaluator<>(br).validate();
+        } catch (Exception e) {
+            assert e instanceof InvalidFieldException;
+        }
+    }
+
     /* NEGATIVE TEST */
 
     @Test
