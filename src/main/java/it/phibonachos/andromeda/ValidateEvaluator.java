@@ -133,6 +133,11 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
                 throw new InvalidFieldException(target.getName(), List.of(v.alternatives()));
 
             return validateAlternatives(target.getName(), v.alternatives());
+        } catch (InvalidFieldException ife) {
+            if (skipWhenUnset)
+                return true;
+
+            throw ife;
         }
     }
 
@@ -146,9 +151,9 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
             // the property do not belong to an evaluated context
             // the mandatory clause is ignored
             boolean swu = !v.mandatory()
-                    || Arrays.stream(v.context()).anyMatch(ctx -> ignoreContexts.contains(ctx))
+                    || this.skipIgnoreContext(v)
                     || (!this.contexts.isEmpty()
-                    && Arrays.stream(v.context()).noneMatch(ctx -> this.contexts.contains(ctx)))
+                        && this.skipNotContext(v))
                     || isIgnorable(Validate.Ignore.MANDATORY);
 
             // check property against its validator
@@ -166,5 +171,13 @@ public class ValidateEvaluator<Target> extends AbstractEvaluator<Target, Boolean
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private boolean skipIgnoreContext(Validate v) {
+        return Arrays.stream(v.context()).anyMatch(ctx -> this.ignoreContexts.contains(ctx));
+    }
+
+    private boolean skipNotContext(Validate v) {
+        return Arrays.stream(v.context()).noneMatch(ctx -> this.contexts.contains(ctx));
     }
 }
